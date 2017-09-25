@@ -1,5 +1,10 @@
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+
 require 'bundler/setup'
+require 'webmock/rspec'
 require 'cred_hubble'
+
+Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |f| require f }
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

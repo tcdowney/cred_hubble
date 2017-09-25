@@ -1,5 +1,5 @@
 require 'cred_hubble/version'
-
-module CredHubble
-  # Your code goes here...
-end
+require 'cred_hubble/exceptions/error'
+require 'cred_hubble/resources/info'
+require 'cred_hubble/resources/health'
+require 'cred_hubble/client'

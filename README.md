@@ -1,10 +1,12 @@
-# CredHubble :telescope:
+# CredHubble :telescope: :full_moon_with_face:
 
-Unofficial Ruby client for storing and fetching credentials from the [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential storage service.
+Unofficial and **incomplete** Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential storage service.
 
-It doesn't do anything yet, but eventually this library will let your Ruby app fetch secrets (e.g. database creds, Rails session secrets, AWS access keys, etc.) from CredHub at runtime, meaning you'll no longer need to store them in plaintext config files or in your app's environment.
+It only supports the unauthenticated `/info` and `/health` endpoints for now, but eventually this library will let your Ruby app fetch secrets (e.g. database creds, Rails session secrets, AWS access keys, etc.) from CredHub at runtime, meaning you'll no longer need to store them in plaintext config files or in your app's environment.
 
 That's the dream at least.
+
+Right now this is just something I'm working on for fun since it's been a while since I've gotten to write a Ruby HTTP client. :grin:
 
 ## Installation
 
@@ -24,7 +26,29 @@ Or install it yourself as:
 
 ## Usage
 
-Nothing to use yet!
+This gem currently only support the CredHub endpoints that allow unauthenticated access:
+
+* `/info`
+* `/health`
+
+To try out these endpoints, just do the following in your favorite Ruby console:
+
+```ruby
+> credhub_url = 'https://credhub.your-cloud-foundry.com:8844'
+> credhub_client = CredHubble::Client.new(credhub_url)
+> info = credhub_client.info
+  => #<CredHubble::Resources::Info:0x00007fb36497a490 ...
+> info.auth_server.url
+  => "https://uaa.service.cf.internal:8443"
+> health = credhub_client.health
+  => #<CredHubble::Resources::Health:0x00007fb3648f0218 ...
+> health.status
+  => "UP"
+```
+
+A future update to the gem will allow you hit authenticated endpoints using either a UAA token or mutual TLS for authentication.
+
+This is still very much a work in progress.
 
 ## Development
 
