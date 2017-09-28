@@ -103,6 +103,47 @@ RSpec.describe CredHubble::Http::Client do
           .to raise_error(CredHubble::Http::UnknownError, "status: #{status}, body: #{response_body}")
       end
     end
+
+    describe 'request headers' do
+      let(:path) { '/api/v1/data/some-credential-id' }
+      let(:status) { 200 }
+      let(:response_body) do
+        '{
+          "id": "cdbb371a-cc03-4a6f-aa21-c6461d66ed96",
+          "name": "/real-secret-stuff",
+          "type": "password",
+          "value": "06d23797cdee41a8857627f31c430ba",
+          "version_created_at": "1990-01-01T01:01:01Z"
+        }'
+      end
+
+      before do
+        stub_request(:get, "#{url}#{path}").to_return(status: status, body: response_body)
+      end
+
+      context 'when client is initialized with an auth_token_header' do
+        let(:token) { 'meesa-jar-jar-binks-token' }
+        subject { CredHubble::Http::Client.new(url, auth_header_token: token) }
+
+        it 'includes an Authorization header with the provided bearer token' do
+          subject.get(path)
+          assert_requested(
+            :get,
+            "#{url}#{path}",
+            headers: { 'Content-Type' => 'application/json', 'Authorization' => "bearer #{token}" }
+          )
+        end
+      end
+
+      context 'when client is initialized with an auth_token_header' do
+        subject { CredHubble::Http::Client.new(url) }
+
+        it 'does not include an authorization header' do
+          subject.get(path)
+          assert_requested(:get, "#{url}#{path}", headers: { 'Content-Type' => 'application/json' })
+        end
+      end
+    end
   end
 
   describe 'SSL verification' do
