@@ -6,10 +6,10 @@ module CredHubble
     class Client
       DEFAULT_HEADERS = { 'Content-Type' => 'application/json' }.freeze
 
-      def initialize(url, auth_header_token: nil, verify_ssl: true)
+      def initialize(url, auth_header_token: nil, credhub_ca_path: nil)
         @url = url
         @auth_header_token = auth_header_token
-        @verify_ssl = verify_ssl
+        @credhub_ca_path = credhub_ca_path
       end
 
       def get(path)
@@ -20,10 +20,10 @@ module CredHubble
 
       private
 
-      attr_reader :auth_header_token, :url, :verify_ssl
+      attr_reader :auth_header_token, :credhub_ca_path, :url
 
       def connection
-        Faraday.new(url: url, headers: request_headers, ssl: { verify: verify_ssl }) do |faraday|
+        Faraday.new(url: url, headers: request_headers, ssl: ssl_config) do |faraday|
           faraday.request :url_encoded
           faraday.adapter Faraday.default_adapter
         end
@@ -34,6 +34,13 @@ module CredHubble
         return headers unless auth_header_token
 
         headers.merge('Authorization' => "bearer #{auth_header_token}")
+      end
+
+      def ssl_config
+        config = { verify: true }
+        return config unless credhub_ca_path
+
+        config.merge(ca_file: credhub_ca_path)
       end
 
       def with_error_handling(&_block)

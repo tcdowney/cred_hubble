@@ -4,14 +4,18 @@ require 'cred_hubble/http/client'
 
 module CredHubble
   class Client
-    def initialize(credhub_url:, auth_header_token: nil)
+    def initialize(credhub_url:, auth_header_token: nil, credhub_ca_path: nil)
       @credhub_url = credhub_url
       @auth_header_token = auth_header_token
-      @verify_ssl = true
+      @credhub_ca_path = credhub_ca_path
     end
 
-    def self.new_from_token(credhub_url:, auth_header_token:)
-      new(credhub_url: credhub_url, auth_header_token: auth_header_token)
+    def self.new_from_token(credhub_url:, auth_header_token:, credhub_ca_path: nil)
+      new(
+        credhub_url: credhub_url,
+        auth_header_token: auth_header_token,
+        credhub_ca_path: credhub_ca_path
+      )
     end
 
     def info
@@ -31,22 +35,14 @@ module CredHubble
 
     private
 
-    attr_reader :auth_header_token, :credhub_url, :verify_ssl
+    attr_reader :auth_header_token, :credhub_url, :credhub_ca_path
 
     def http_client
       CredHubble::Http::Client.new(
         credhub_url,
         auth_header_token: auth_header_token,
-        verify_ssl: verify_ssl
+        credhub_ca_path: credhub_ca_path
       )
-    end
-
-    # TODO: Remove ability to disable ssl verification
-    # Only leaving this in to simplify initial development
-    # Will be removed before the 0.0.1 release since non-SSL + CredHub is not a good combo
-    def unsafe_mode!
-      @verify_ssl = false
-      puts 'WARNING: SSL verification disabled!'
     end
   end
 end

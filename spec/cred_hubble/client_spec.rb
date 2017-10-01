@@ -6,6 +6,7 @@ RSpec.describe CredHubble::Client do
   let(:response_body) { '{}' }
 
   let(:credhub_url) { 'https://credhub.cloudfoundry.com:8845' }
+  let(:credhub_ca_path) { '/custom/certs/ca.crt' }
   subject { CredHubble::Client.new(credhub_url: credhub_url) }
 
   before do
@@ -20,6 +21,18 @@ RSpec.describe CredHubble::Client do
       client = CredHubble::Client.new_from_token(credhub_url: credhub_url, auth_header_token: token)
       expect(client.send(:credhub_url)).to eq(credhub_url)
       expect(client.send(:auth_header_token)).to eq(token)
+    end
+
+    it 'allows the user to optionally supply a file path for the CredHub CA cert' do
+      client = CredHubble::Client.new_from_token(
+        credhub_url: credhub_url,
+        auth_header_token: token,
+        credhub_ca_path: credhub_ca_path
+      )
+
+      expect(client.send(:credhub_url)).to eq(credhub_url)
+      expect(client.send(:auth_header_token)).to eq(token)
+      expect(client.send(:credhub_ca_path)).to eq(credhub_ca_path)
     end
   end
 

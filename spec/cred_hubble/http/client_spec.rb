@@ -150,19 +150,28 @@ RSpec.describe CredHubble::Http::Client do
     context 'when verify_ssl is not specified' do
       subject { CredHubble::Http::Client.new(url) }
 
-      it 'has ssl verification enabled by default' do
+      it 'has ssl verification enabled' do
         connection = subject.send(:connection)
         expect(connection.ssl.verify).to eq(true)
       end
     end
 
-    # TODO: Remove ability to disable ssl verification
-    context 'when verify_ssl is set to false' do
-      subject { CredHubble::Http::Client.new(url, verify_ssl: false) }
+    context 'when a file path is not provided for the CredHub CA' do
+      subject { CredHubble::Http::Client.new(url) }
 
-      it 'has ssl verification disabled' do
+      it 'does not include any additional CA certs' do
         connection = subject.send(:connection)
-        expect(connection.ssl.verify).to eq(false)
+        expect(connection.ssl.ca_file).to be_nil
+      end
+    end
+
+    context 'when a file path is provided for the CredHub CA' do
+      let(:credhub_ca_path) { '/custom/certstore/credhub_ca.crt' }
+      subject { CredHubble::Http::Client.new(url, credhub_ca_path: credhub_ca_path) }
+
+      it 'includes the cert file in the connection ssl config' do
+        connection = subject.send(:connection)
+        expect(connection.ssl.ca_file).to eq(credhub_ca_path)
       end
     end
   end
