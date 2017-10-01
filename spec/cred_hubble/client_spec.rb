@@ -65,12 +65,16 @@ RSpec.describe CredHubble::Client do
   describe '#credential_by_id' do
     let(:response_body) do
       '{
-        "id": "cdbb371a-cc03-4a6f-aa21-c6461d66ed96",
-        "name": "/the-grid",
-        "type": "value",
-        "value": "biodigital-jazz-man",
-        "version_created_at": "1985-01-01T01:01:01Z"
-      }'
+          "id": "15811465-8538-460d-9682-5514d44439fd",
+          "name": "/load-balancer-tls-cert",
+          "type": "certificate",
+          "value": {
+            "ca": "-----BEGIN CERTIFICATE-----\n... CA CERT ...\n-----END CERTIFICATE-----",
+            "certificate": "-----BEGIN CERTIFICATE-----\n... CERTIFICATE ...\n-----END CERTIFICATE-----",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\n... RSA PRIVATE KEY ...\n-----END RSA PRIVATE KEY-----"
+          },
+          "version_created_at": "1990-01-05T01:01:01Z"
+        }'
     end
 
     it 'makes a request to the /api/v1/data endpoint for the given credential id' do
@@ -80,9 +84,9 @@ RSpec.describe CredHubble::Client do
 
     it 'returns a Credential resource' do
       credential = subject.credential_by_id('cdbb371a-cc03-4a6f-aa21-c6461d66ed96')
-      expect(credential).to be_a(CredHubble::Resources::Credential)
-      expect(credential.name).to eq('/the-grid')
-      expect(credential.version_created_at).to eq('1985-01-01T01:01:01Z')
+      expect(credential).to be_a(CredHubble::Resources::CertificateCredential)
+      expect(credential.name).to eq('/load-balancer-tls-cert')
+      expect(credential.version_created_at).to eq('1990-01-05T01:01:01Z')
     end
   end
 end

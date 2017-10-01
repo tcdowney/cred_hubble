@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 RSpec.describe CredHubble::Resources::ValueCredential do
+  subject { CredHubble::Resources::ValueCredential.new }
+
   describe '.from_json' do
     subject { CredHubble::Resources::ValueCredential }
 
@@ -15,8 +17,10 @@ RSpec.describe CredHubble::Resources::ValueCredential do
         }'
       end
 
-      it 'instantiates a new ValueCredential object with the value type' do
+      it 'instantiates a new ValueCredential object' do
         credential = subject.from_json(json_response)
+
+        expect(credential).to be_a(CredHubble::Resources::ValueCredential)
         expect(credential.value).to eq('biodigital-jazz-man')
       end
     end
@@ -29,5 +33,17 @@ RSpec.describe CredHubble::Resources::ValueCredential do
     subject { CredHubble::Resources::ValueCredential.new(value: 'biodigital-jazz-man') }
 
     it_behaves_like 'an immutable resource', :value
+  end
+
+  describe '#type' do
+    it 'returns "value"' do
+      expect(subject.type).to eq('value')
+    end
+  end
+
+  describe '#type=' do
+    it 'raises a NoMethodError' do
+      expect { subject.type = 'foo' }.to raise_error(NoMethodError)
+    end
   end
 end

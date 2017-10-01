@@ -26,7 +26,7 @@ module CredHubble
 
     def credential_by_id(credential_id)
       response = http_client.get("/api/v1/data/#{credential_id}").body
-      CredHubble::Resources::Credential.from_json(response)
+      CredHubble::Resources::CredentialFactory.from_json(response)
     end
 
     private

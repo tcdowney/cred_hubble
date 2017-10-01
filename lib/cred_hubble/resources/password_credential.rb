@@ -2,11 +2,11 @@ require 'cred_hubble/resources/credential'
 
 module CredHubble
   module Resources
-    class ValueCredential < Credential
+    class PasswordCredential < Credential
       attribute :value, String
 
       def type
-        Credential::VALUE_TYPE
+        Credential::PASSWORD_TYPE
       end
     end
   end

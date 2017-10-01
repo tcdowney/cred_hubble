@@ -2,11 +2,11 @@ require 'cred_hubble/resources/credential'
 
 module CredHubble
   module Resources
-    class ValueCredential < Credential
-      attribute :value, String
+    class JsonCredential < Credential
+      attribute :value, Hash
 
       def type
-        Credential::VALUE_TYPE
+        Credential::JSON_TYPE
       end
     end
   end
