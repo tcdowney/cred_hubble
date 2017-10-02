@@ -14,17 +14,17 @@ RSpec.describe CredHubble::Client do
     allow(mock_http_client).to receive(:get).and_return(mock_response)
   end
 
-  describe '.new_from_token' do
+  describe '.new_from_token_auth' do
     let(:token) { 'example-token-string' }
 
     it 'instantiates an instance of the client with an oAuth2 bearer token' do
-      client = CredHubble::Client.new_from_token(credhub_url: credhub_url, auth_header_token: token)
+      client = CredHubble::Client.new_from_token_auth(credhub_url: credhub_url, auth_header_token: token)
       expect(client.send(:credhub_url)).to eq(credhub_url)
       expect(client.send(:auth_header_token)).to eq(token)
     end
 
     it 'allows the user to optionally supply a file path for the CredHub CA cert' do
-      client = CredHubble::Client.new_from_token(
+      client = CredHubble::Client.new_from_token_auth(
         credhub_url: credhub_url,
         auth_header_token: token,
         credhub_ca_path: credhub_ca_path
@@ -33,6 +33,54 @@ RSpec.describe CredHubble::Client do
       expect(client.send(:credhub_url)).to eq(credhub_url)
       expect(client.send(:auth_header_token)).to eq(token)
       expect(client.send(:credhub_ca_path)).to eq(credhub_ca_path)
+    end
+  end
+
+  describe '.new_from_mtls_auth' do
+    let(:client_cert_path) { '/mutual/tls/certs/example-cert.crt' }
+    let(:client_key_path) { '/mutual/tls/keys/rsa.pem' }
+    let(:mock_cert_file) { instance_double(File) }
+    let(:mock_key_file) { instance_double(File) }
+    let(:mock_cert) { instance_double(OpenSSL::X509::Certificate) }
+    let(:mock_key) { instance_double(OpenSSL::PKey::RSA) }
+
+    before do
+      allow(File).to receive(:read).and_call_original
+      allow(File).to receive(:read).with(client_cert_path).and_return(mock_cert_file)
+      allow(File).to receive(:read).with(client_key_path).and_return(mock_key_file)
+
+      allow(OpenSSL::X509::Certificate).to receive(:new).with(mock_cert_file).and_return(mock_cert)
+      allow(OpenSSL::PKey::RSA).to receive(:new).with(mock_key_file).and_return(mock_key)
+    end
+
+    it 'instantiates an instance of the client with an oAuth2 bearer token' do
+      client = CredHubble::Client.new_from_mtls_auth(
+        credhub_url: credhub_url,
+        client_cert_path: client_cert_path,
+        client_key_path: client_key_path
+      )
+
+      expect(client.send(:credhub_url)).to eq(credhub_url)
+      expect(client.send(:client_cert_path)).to eq(client_cert_path)
+      expect(client.send(:client_key_path)).to eq(client_key_path)
+      expect(client.send(:client_cert)).to eq(mock_cert)
+      expect(client.send(:client_key)).to eq(mock_key)
+    end
+
+    it 'allows the user to optionally supply a file path for the CredHub CA cert' do
+      client = CredHubble::Client.new_from_mtls_auth(
+        credhub_url: credhub_url,
+        credhub_ca_path: credhub_ca_path,
+        client_cert_path: client_cert_path,
+        client_key_path: client_key_path
+      )
+
+      expect(client.send(:credhub_url)).to eq(credhub_url)
+      expect(client.send(:credhub_ca_path)).to eq(credhub_ca_path)
+      expect(client.send(:client_cert_path)).to eq(client_cert_path)
+      expect(client.send(:client_key_path)).to eq(client_key_path)
+      expect(client.send(:client_cert)).to eq(mock_cert)
+      expect(client.send(:client_key)).to eq(mock_key)
     end
   end
 

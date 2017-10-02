@@ -135,7 +135,7 @@ RSpec.describe CredHubble::Http::Client do
         end
       end
 
-      context 'when client is initialized with an auth_token_header' do
+      context 'when client is not initialized with an auth_token_header' do
         subject { CredHubble::Http::Client.new(url) }
 
         it 'does not include an authorization header' do
@@ -146,14 +146,12 @@ RSpec.describe CredHubble::Http::Client do
     end
   end
 
-  describe 'SSL verification' do
-    context 'when verify_ssl is not specified' do
-      subject { CredHubble::Http::Client.new(url) }
+  describe 'SSL/TLS configuration' do
+    subject { CredHubble::Http::Client.new(url) }
 
-      it 'has ssl verification enabled' do
-        connection = subject.send(:connection)
-        expect(connection.ssl.verify).to eq(true)
-      end
+    it 'has ssl verification enabled' do
+      connection = subject.send(:connection)
+      expect(connection.ssl.verify).to eq(true)
     end
 
     context 'when a file path is not provided for the CredHub CA' do
@@ -169,9 +167,35 @@ RSpec.describe CredHubble::Http::Client do
       let(:credhub_ca_path) { '/custom/certstore/credhub_ca.crt' }
       subject { CredHubble::Http::Client.new(url, credhub_ca_path: credhub_ca_path) }
 
-      it 'includes the cert file in the connection ssl config' do
+      it 'includes the CA cert file path in the connection ssl config' do
         connection = subject.send(:connection)
         expect(connection.ssl.ca_file).to eq(credhub_ca_path)
+      end
+    end
+
+    describe 'mutual TLS client cert and client key' do
+      let(:mock_cert) { instance_double(OpenSSL::X509::Certificate) }
+      let(:mock_key) { instance_double(OpenSSL::PKey::RSA) }
+
+      context 'when a client cert and client key are not provided' do
+        subject { CredHubble::Http::Client.new(url) }
+
+        it 'does not include any client cert or client key' do
+          connection = subject.send(:connection)
+          expect(connection.ssl.client_cert).to be_nil
+          expect(connection.ssl.client_key).to be_nil
+        end
+      end
+
+      context 'when a client cert and client key are provided for the CredHub CA' do
+        let(:credhub_ca_path) { '/custom/certstore/credhub_ca.crt' }
+        subject { CredHubble::Http::Client.new(url, client_cert: mock_cert, client_key: mock_key) }
+
+        it 'includes the cert file in the connection ssl config' do
+          connection = subject.send(:connection)
+          expect(connection.ssl.client_cert).to eq(mock_cert)
+          expect(connection.ssl.client_key).to eq(mock_key)
+        end
       end
     end
   end
