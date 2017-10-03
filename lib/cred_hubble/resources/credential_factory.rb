@@ -13,24 +13,27 @@ module CredHubble
     class CredentialFactory < BaseResource
       def self.from_json(raw_json)
         parsed_json = parse_json(raw_json)
+        credential_from_data(parsed_json)
+      end
 
-        case parsed_json['type']
+      def self.credential_from_data(credential_data)
+        case credential_data['type']
         when Credential::VALUE_TYPE
-          ValueCredential.new(parsed_json)
+          ValueCredential.new(credential_data)
         when Credential::JSON_TYPE
-          JsonCredential.new(parsed_json)
+          JsonCredential.new(credential_data)
         when Credential::PASSWORD_TYPE
-          PasswordCredential.new(parsed_json)
+          PasswordCredential.new(credential_data)
         when Credential::USER_TYPE
-          UserCredential.new(parsed_json)
+          UserCredential.new(credential_data)
         when Credential::CERTIFICATE_TYPE
-          CertificateCredential.new(parsed_json)
+          CertificateCredential.new(credential_data)
         when Credential::RSA_TYPE
-          RsaCredential.new(parsed_json)
+          RsaCredential.new(credential_data)
         when Credential::SSH_TYPE
-          SshCredential.new(parsed_json)
+          SshCredential.new(credential_data)
         else
-          Credential.new(parsed_json)
+          Credential.new(credential_data)
         end
       end
     end

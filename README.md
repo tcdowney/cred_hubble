@@ -36,14 +36,18 @@ This gem currently supports the following CredHub endpoints:
 To try out the unauthenticated `info` and `health` endpoints, just do the following in your favorite Ruby console:
 
 ```ruby
-> credhub_url = 'https://credhub.your-cloud-foundry.com:8844'
+> credhub_url    = 'https://credhub.your-cloud-foundry.com:8844'
 > credhub_client = CredHubble::Client.new(credhub_url: credhub_url)
+           
 > info = credhub_client.info
   => #<CredHubble::Resources::Info:0x00007fb36497a490 ...
+  
 > info.auth_server.url
   => "https://uaa.service.cf.internal:8443"
+  
 > health = credhub_client.health
   => #<CredHubble::Resources::Health:0x00007fb3648f0218 ...
+  
 > health.status
   => "UP"
 ```
@@ -59,6 +63,7 @@ Here are some examples:
                      credhub_url: credhub_url,
                      auth_header_token: auth_header
                    )
+           
 > credential = credhub_client.credential_by_id('f8d5a201-c3b9-48ae-8bc4-3b86b42210a1')
   => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
 ```

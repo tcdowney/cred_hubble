@@ -2,6 +2,7 @@ require 'cred_hubble/resources/info'
 require 'cred_hubble/resources/health'
 
 require 'cred_hubble/resources/credential'
+require 'cred_hubble/resources/credential_collection'
 require 'cred_hubble/resources/value_credential'
 require 'cred_hubble/resources/json_credential'
 require 'cred_hubble/resources/password_credential'

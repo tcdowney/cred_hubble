@@ -10,7 +10,7 @@ RSpec.describe CredHubble::Client do
   subject { CredHubble::Client.new(credhub_url: credhub_url) }
 
   before do
-    allow(subject).to receive(:http_client).and_return(mock_http_client)
+    allow(CredHubble::Http::Client).to receive(:new).and_return(mock_http_client)
     allow(mock_http_client).to receive(:get).and_return(mock_response)
   end
 
@@ -148,6 +148,59 @@ RSpec.describe CredHubble::Client do
       expect(credential).to be_a(CredHubble::Resources::CertificateCredential)
       expect(credential.name).to eq('/load-balancer-tls-cert')
       expect(credential.version_created_at).to eq('1990-01-05T01:01:01Z')
+    end
+  end
+
+  describe '#credentials_by_name' do
+    let(:response_body) do
+      '{
+        "data":[
+          {
+            "type":"password",
+            "version_created_at":"2017-10-03T04:12:21Z",
+            "id":"5298e0e4-c3f5-4c73-a156-9ffce4c137f5",
+            "name":"/sunday-clothes-creds",
+            "value":"Put on your Sunday clothes there\'s lots of world out there"
+          },
+          {
+            "type":"password",
+            "version_created_at":"2017-10-03T04:12:19Z",
+            "id":"6980ec59-c7e6-449a-b525-298648cfe6a7",
+            "name":"/sunday-clothes-creds",
+            "value":"Get out the brilliantine and dime cigars"
+          },
+          {
+            "type":"password",
+            "version_created_at":"2017-10-02T01:56:54Z",
+            "id":"3e709d6e-585c-4526-ac0d-fe99316f2255",
+            "name":"/sunday-clothes-creds",
+            "value":"We\'re gonna find adventure in the evening air"
+          }
+        ]
+      }'
+    end
+
+    it 'makes a request to the /api/v1/data endpoint with the name as a query parameter' do
+      subject.credentials_by_name('/sunday-clothes-creds')
+      expect(mock_http_client).to have_received(:get).with('/api/v1/data?name=%2Fsunday-clothes-creds')
+    end
+
+    it 'includes optional current and version parameters when provided' do
+      subject.credentials_by_name('/sunday-clothes-creds', current: false, versions: 100)
+      expect(mock_http_client).to have_received(:get)
+        .with('/api/v1/data?name=%2Fsunday-clothes-creds&current=false&versions=100')
+    end
+
+    it 'returns a CredentialCollection' do
+      credentials = subject.credentials_by_name('/sunday-clothes-creds')
+      expect(credentials).to all(be_a(CredHubble::Resources::PasswordCredential))
+      expect(credentials.map(&:id)).to match_array(
+        %w[
+          5298e0e4-c3f5-4c73-a156-9ffce4c137f5
+          6980ec59-c7e6-449a-b525-298648cfe6a7
+          3e709d6e-585c-4526-ac0d-fe99316f2255
+        ]
+      )
     end
   end
 end

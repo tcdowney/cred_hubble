@@ -1,5 +1,5 @@
-require 'cred_hubble/resources/info'
-require 'cred_hubble/resources/health'
+require 'addressable'
+require 'cred_hubble/resources/resources'
 require 'cred_hubble/http/client'
 require 'openssl'
 
@@ -47,6 +47,16 @@ module CredHubble
       CredHubble::Resources::CredentialFactory.from_json(response)
     end
 
+    def credentials_by_name(name, current: nil, versions: nil)
+      template = Addressable::Template.new('/api/v1/data{?query*}')
+
+      query_args = { name: name, current: current, versions: versions }.reject { |_, v| v.nil? }
+      path = template.expand(query: query_args).to_s
+
+      response = http_client.get(path).body
+      CredHubble::Resources::CredentialCollection.from_json(response)
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :credhub_ca_path, :credhub_url
@@ -62,10 +72,14 @@ module CredHubble
     end
 
     def client_cert
+      return unless client_cert_path
+
       OpenSSL::X509::Certificate.new(File.read(client_cert_path))
     end
 
     def client_key
+      return unless client_key_path
+
       OpenSSL::PKey::RSA.new(File.read(client_key_path))
     end
   end
