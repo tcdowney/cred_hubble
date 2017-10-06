@@ -184,7 +184,7 @@ the `credentials_by_name` method.
                   @type="user",
                   @version_created_at="2017-10-06T05:11:43Z">
 ````
-````
+
 
 ## Development
 
