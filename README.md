@@ -25,31 +25,7 @@ Or install it yourself as:
 
     $ gem install cred_hubble
 
-## Usage
-
-This gem currently supports the following CredHub endpoints:
-
-* `/info`
-* `/health`
-* `/api/v1/data/<credential-id>`
-
-To try out the unauthenticated `info` and `health` endpoints, just do the following in your favorite Ruby console:
-
-```ruby
-> credhub_client = CredHubble::Client.new(host: 'credhub.your-cloud-foundry.com', port: '8844')
-           
-> info = credhub_client.info
-  => #<CredHubble::Resources::Info:0x00007fb36497a490 ...
-  
-> info.auth_server.url
-  => "https://uaa.service.cf.internal:8443"
-  
-> health = credhub_client.health
-  => #<CredHubble::Resources::Health:0x00007fb3648f0218 ...
-  
-> health.status
-  => "UP"
-```
+## Authentication
 
 To call endpoints that require authentication, you can authenticate with either an oAuth2 bearer token auth header or using mutual TLS (mTLS).
 Here are some examples:
@@ -104,6 +80,111 @@ If your CredHub server is using a self-signed (or otherwise non-trusted by your 
 > credential = credhub_client.credential_by_id('f8d5a201-c3b9-48ae-8bc4-3b86b42210a1')
   => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
 ```
+
+## Usage
+
+CredHubble currently supports the following CredHub endpoints:
+
+* **[GET Info](#get-info-and-get-health):** `/info`
+* **[GET Health](#get-info-and-get-health):** `/health`
+* **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
+* **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
+* **[PUT Credential](#put-credential):** `/api/v1/data`
+
+
+### GET Info and GET Health
+To try out the unauthenticated `info` and `health` endpoints, just do the following in your Ruby console:
+
+```ruby
+> credhub_client = CredHubble::Client.new(host: 'credhub.your-cloud-foundry.com', port: '8844')
+           
+> info = credhub_client.info
+  => #<CredHubble::Resources::Info:0x00007fb36497a490 ...
+  
+> info.auth_server.url
+  => "https://uaa.service.cf.internal:8443"
+  
+> health = credhub_client.health
+  => #<CredHubble::Resources::Health:0x00007fb3648f0218 ...
+  
+> health.status
+  => "UP"
+```
+
+For accessing endpoints that require authentication, simply create an authenticated client using one of the [authentication methods above](#authentication).
+
+### GET Credential by ID
+The `credential_by_id` method retrieves a single Credential resource from CredHub by ID.
+
+```ruby
+> credhub_client.credential_by_id('f297f736-dad2-4450-a7da-d3ff99f2030d')
+  => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
+```
+
+### GET Credentials by Name
+Retrieves a collection of Credentials from CredHub for the given name. The `credentials_by_name` method will return all stored versions of the credential by default.
+You can retrieve only the most recent version of the credential using the `current` option, or specify the number of versions to fetch with the `versions` option.
+
+```ruby
+> credentials = credhub_client.credentials_by_name('/admin-user-password')
+  => #<CredHubble::Resources::CredentialCollection:0x00007f @data=[#<CredHubble::Resources::PasswordCredential:0x00004a ...
+> credentials.count
+  => 3
+> credentials.map(&:id)
+  => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5", "6980ec59-c7e6-449a-b525-298648cfe6a7", "3e709d6e-585c-4526-ac0d-fe99316f2255"]
+  
+> credentials = credhub_client.credentials_by_name('/admin-user-password', versions: 2)  
+> credentials.count
+  => 2
+> credentials.map(&:id)
+  => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5", "6980ec59-c7e6-449a-b525-298648cfe6a7"]
+  
+> credentials = credhub_client.credentials_by_name('/admin-user-password', current: true)
+  => #<CredHubble::Resources::CredentialCollection:0x00007f @data=[#<CredHubble::Resources::PasswordCredential:0x00004a ...
+> credentials.count
+  => 1
+> credentials.map(&:id)
+  => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5"]
+```
+
+### PUT Credential
+You can create new Credentials using the `put_credential` method. If you wish to replace an already existing Credential, simply pass
+`overwrite: true` to the method and CredHub will create a new version of the Credential. Previous versions can be retrieved by using
+the `credentials_by_name` method.
+
+```ruby
+> credential = CredHubble::Resources::UserCredential.new(
+                    name: '/foundry-fred-user',
+                    value: {username: 'foundy_fred', password: 's3cr3t'}
+               )   
+  => #<CredHubble::Resources::UserCredential:0x00007fb322caf3f0 @name="/foundry-fred-user", @value=#<CredHubble::Resources::UserValue ...
+  
+> credhub_client.put_credential(credential)
+  => #<CredHubble::Resources::UserCredential:0x00007fb322d676d0
+        @name="/foundry-fred-user",
+        @value=#<CredHubble::Resources::UserValue:0x00007fb322d67478
+                  @username="foundy_fred",
+                  @password="s3cr3t",
+                  @password_hash="$6$WwMLCRDr$Br54U0EnWD.A5i1EV9Cc7P16ZdjIBk0fFiYKghfOjW1MvL.vaXhWua.eGIbe0ziQIEP4s2OcGQpEEsc9ClFuA0">,
+                  @id="92775889-71e0-41d1-a44c-93eb8fc5161a",
+                  @type="user",
+                  @version_created_at="2017-10-06T05:10:57Z">
+             
+> credential.value.password = 'foo bar'
+  => "foo bar"
+  
+> credhub_client.put_credential(credential, overwrite: true)
+  => #<CredHubble::Resources::UserCredential:0x00007fb322d676d0
+        @name="/foundry-fred-user",
+        @value=#<CredHubble::Resources::UserValue:0x00007fb322d67478
+                  @username="foundy_fred",
+                  @password="foo bar",
+                  @password_hash="$6$WNAIgDrf$/.DxIfIg.8W6ZaIRjrjlOWS8FenigeWtswWr/D9edMbmSReYCzgG6VVdcdaftenq5VED3C8MJNVtDnNLF86SD.">,
+                  @id="292ae24c-d7a3-4d8b-86a2-43630b83bafb",
+                  @type="user",
+                  @version_created_at="2017-10-06T05:11:43Z">
+````
+````
 
 ## Development
 
