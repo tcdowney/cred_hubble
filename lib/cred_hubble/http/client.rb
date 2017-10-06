@@ -20,6 +20,12 @@ module CredHubble
         end
       end
 
+      def put(path, body)
+        with_error_handling do
+          connection.put(path, body)
+        end
+      end
+
       private
 
       attr_reader :auth_header_token, :client_cert, :client_key, :credhub_ca_path, :url

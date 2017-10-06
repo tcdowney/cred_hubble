@@ -1,5 +1,67 @@
 require 'spec_helper'
 
+RSpec.shared_examples 'a request with error handling' do
+  context 'when the response status is 400' do
+    let(:response_body) { 'Bad request' }
+    let(:status) { 400 }
+
+    it 'raises a CredHubble::Http::BadRequestError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::BadRequestError, "status: #{status}, body: #{response_body}")
+    end
+  end
+
+  context 'when the response status is 401' do
+    let(:response_body) { 'Unauthorized' }
+    let(:status) { 401 }
+
+    it 'raises a CredHubble::Http::UnauthorizedError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::UnauthorizedError, "status: #{status}, body: #{response_body}")
+    end
+  end
+
+  context 'when the response status is 403' do
+    let(:response_body) { 'Forbidden' }
+    let(:status) { 403 }
+
+    it 'raises a CredHubble::Http::ForbiddenError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::ForbiddenError, "status: #{status}, body: #{response_body}")
+    end
+  end
+
+  context 'when the response status is 404' do
+    let(:response_body) { 'Not found' }
+    let(:status) { 404 }
+
+    it 'raises a CredHubble::Http::NotFoundError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::NotFoundError, "status: #{status}, body: #{response_body}")
+    end
+  end
+
+  context 'when the response status is 500' do
+    let(:response_body) { 'Internal Server Error' }
+    let(:status) { 500 }
+
+    it 'raises a CredHubble::Http::InternalServerError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::InternalServerError, "status: #{status}, body: #{response_body}")
+    end
+  end
+
+  context 'when the response status is not otherwise handled' do
+    let(:response_body) { "I'm a teapot" }
+    let(:status) { 418 }
+
+    it 'raises a CredHubble::Http::InternalServerError' do
+      expect { subject }
+        .to raise_error(CredHubble::Http::UnknownError, "status: #{status}, body: #{response_body}")
+    end
+  end
+end
+
 RSpec.describe CredHubble::Http::Client do
   let(:url) { 'https://example.com:8845' }
   subject { CredHubble::Http::Client.new(url) }
@@ -30,97 +92,27 @@ RSpec.describe CredHubble::Http::Client do
       expect(response.status).to eq(status)
     end
 
-    context 'when a Faraday::SSLError occurrs' do
-      let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
-      let(:fake_connection) { instance_double(Faraday::Connection) }
+    describe 'error handling' do
+      subject { CredHubble::Http::Client.new(url).get(path) }
 
-      before do
-        allow(subject).to receive(:connection).and_return(fake_connection)
-        allow(fake_connection).to receive(:get).and_raise(error)
+      context 'when a Faraday::SSLError occurrs' do
+        let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
+        let(:fake_connection) { instance_double(Faraday::Connection) }
+
+        before do
+          allow_any_instance_of(CredHubble::Http::Client).to receive(:connection).and_return(fake_connection)
+          allow(fake_connection).to receive(:get).and_raise(error)
+        end
+
+        it 'raises a CredHubble::Exceptions::SSLError' do
+          expect { subject }.to raise_error(CredHubble::Http::SSLError)
+        end
       end
 
-      it 'raises a CredHubble::Exceptions::SSLError' do
-        expect { subject.get(path) }.to raise_error(CredHubble::Http::SSLError)
-      end
-    end
-
-    context 'when the response status is 400' do
-      let(:response_body) { 'Bad request' }
-      let(:status) { 400 }
-
-      it 'raises a CredHubble::Http::BadRequestError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::BadRequestError, "status: #{status}, body: #{response_body}")
-      end
-    end
-
-    context 'when the response status is 401' do
-      let(:response_body) { 'Unauthorized' }
-      let(:status) { 401 }
-
-      it 'raises a CredHubble::Http::UnauthorizedError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::UnauthorizedError, "status: #{status}, body: #{response_body}")
-      end
-    end
-
-    context 'when the response status is 403' do
-      let(:response_body) { 'Forbidden' }
-      let(:status) { 403 }
-
-      it 'raises a CredHubble::Http::ForbiddenError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::ForbiddenError, "status: #{status}, body: #{response_body}")
-      end
-    end
-
-    context 'when the response status is 404' do
-      let(:response_body) { 'Not found' }
-      let(:status) { 404 }
-
-      it 'raises a CredHubble::Http::NotFoundError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::NotFoundError, "status: #{status}, body: #{response_body}")
-      end
-    end
-
-    context 'when the response status is 500' do
-      let(:response_body) { 'Internal Server Error' }
-      let(:status) { 500 }
-
-      it 'raises a CredHubble::Http::InternalServerError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::InternalServerError, "status: #{status}, body: #{response_body}")
-      end
-    end
-
-    context 'when the response status is not otherwise handled' do
-      let(:response_body) { "I'm a teapot" }
-      let(:status) { 418 }
-
-      it 'raises a CredHubble::Http::InternalServerError' do
-        expect { subject.get(path) }
-          .to raise_error(CredHubble::Http::UnknownError, "status: #{status}, body: #{response_body}")
-      end
+      it_behaves_like 'a request with error handling'
     end
 
     describe 'request headers' do
-      let(:path) { '/api/v1/data/some-credential-id' }
-      let(:status) { 200 }
-      let(:response_body) do
-        '{
-          "id": "cdbb371a-cc03-4a6f-aa21-c6461d66ed96",
-          "name": "/real-secret-stuff",
-          "type": "password",
-          "value": "06d23797cdee41a8857627f31c430ba",
-          "version_created_at": "1990-01-01T01:01:01Z"
-        }'
-      end
-
-      before do
-        stub_request(:get, "#{url}#{path}").to_return(status: status, body: response_body)
-      end
-
       context 'when client is initialized with an auth_token_header' do
         let(:token) { 'meesa-jar-jar-binks-token' }
         subject { CredHubble::Http::Client.new(url, auth_header_token: token) }
@@ -141,6 +133,89 @@ RSpec.describe CredHubble::Http::Client do
         it 'does not include an authorization header' do
           subject.get(path)
           assert_requested(:get, "#{url}#{path}", headers: { 'Content-Type' => 'application/json' })
+        end
+      end
+    end
+  end
+
+  describe '#put' do
+    let(:path) { '/api/v1/data' }
+    let(:status) { 200 }
+    let(:request_body) do
+      '{
+        "name": "/la-la-land",
+        "type": "value",
+        "value": "another day of sun: purple shirt parkour"
+      }'
+    end
+    let(:response_body) do
+      '{
+        "id": "62630719-2413-4332-9e39-a8acbd73d3b7",
+        "name": "/la-la-land",
+        "type": "value",
+        "value": "another day of sun: purple shirt parkour",
+        "version_created_at": "2017-01-01T04:07:18Z"
+      }'
+    end
+
+    before do
+      stub_request(:put, "#{url}#{path}").with(body: request_body).to_return(status: status, body: response_body)
+    end
+
+    it 'makes a PUT request with the given body to the requested url and path' do
+      response = subject.put(path, request_body)
+      expect(response).to be_a(Faraday::Response)
+      expect(response.body).to eq(response_body)
+      expect(response.status).to eq(status)
+    end
+
+    describe 'error handling' do
+      subject { CredHubble::Http::Client.new(url).put(path, request_body) }
+
+      context 'when a Faraday::SSLError occurrs' do
+        let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
+        let(:fake_connection) { instance_double(Faraday::Connection) }
+
+        before do
+          allow_any_instance_of(CredHubble::Http::Client).to receive(:connection).and_return(fake_connection)
+          allow(fake_connection).to receive(:put).and_raise(error)
+        end
+
+        it 'raises a CredHubble::Exceptions::SSLError' do
+          expect { subject }.to raise_error(CredHubble::Http::SSLError)
+        end
+      end
+
+      it_behaves_like 'a request with error handling'
+    end
+
+    describe 'request headers' do
+      context 'when client is initialized with an auth_token_header' do
+        let(:token) { 'meesa-jar-jar-binks-token' }
+        subject { CredHubble::Http::Client.new(url, auth_header_token: token) }
+
+        it 'includes an Authorization header with the provided bearer token' do
+          subject.put(path, request_body)
+          assert_requested(
+            :put,
+            "#{url}#{path}",
+            body: request_body,
+            headers: { 'Content-Type' => 'application/json', 'Authorization' => "bearer #{token}" }
+          )
+        end
+      end
+
+      context 'when client is not initialized with an auth_token_header' do
+        subject { CredHubble::Http::Client.new(url) }
+
+        it 'does not include an authorization header' do
+          subject.put(path, request_body)
+          assert_requested(
+            :put,
+            "#{url}#{path}",
+            body: request_body,
+            headers: { 'Content-Type' => 'application/json' }
+          )
         end
       end
     end
