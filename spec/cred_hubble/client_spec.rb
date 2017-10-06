@@ -6,8 +6,10 @@ RSpec.describe CredHubble::Client do
   let(:response_body) { '{}' }
 
   let(:credhub_url) { 'https://credhub.cloudfoundry.com:8845' }
-  let(:credhub_ca_path) { '/custom/certs/ca.crt' }
-  subject { CredHubble::Client.new(credhub_url: credhub_url) }
+  let(:credhub_host) { 'credhub.cloudfoundry.com' }
+  let(:credhub_port) { '8845' }
+  let(:ca_path) { '/custom/certs/ca.crt' }
+  subject { CredHubble::Client.new(host: credhub_host, port: credhub_port) }
 
   before do
     allow(CredHubble::Http::Client).to receive(:new).and_return(mock_http_client)
@@ -19,21 +21,26 @@ RSpec.describe CredHubble::Client do
     let(:token) { 'example-token-string' }
 
     it 'instantiates an instance of the client with an oAuth2 bearer token' do
-      client = CredHubble::Client.new_from_token_auth(credhub_url: credhub_url, auth_header_token: token)
+      client = CredHubble::Client.new_from_token_auth(
+        host: credhub_host,
+        port: credhub_port,
+        auth_header_token: token
+      )
       expect(client.send(:credhub_url)).to eq(credhub_url)
       expect(client.send(:auth_header_token)).to eq(token)
     end
 
     it 'allows the user to optionally supply a file path for the CredHub CA cert' do
       client = CredHubble::Client.new_from_token_auth(
-        credhub_url: credhub_url,
+        host: credhub_host,
+        port: credhub_port,
         auth_header_token: token,
-        credhub_ca_path: credhub_ca_path
+        ca_path: ca_path
       )
 
       expect(client.send(:credhub_url)).to eq(credhub_url)
       expect(client.send(:auth_header_token)).to eq(token)
-      expect(client.send(:credhub_ca_path)).to eq(credhub_ca_path)
+      expect(client.send(:ca_path)).to eq(ca_path)
     end
   end
 
@@ -54,9 +61,10 @@ RSpec.describe CredHubble::Client do
       allow(OpenSSL::PKey::RSA).to receive(:new).with(mock_key_file).and_return(mock_key)
     end
 
-    it 'instantiates an instance of the client with an oAuth2 bearer token' do
+    it 'instantiates an instance of the client with a client cert and client key' do
       client = CredHubble::Client.new_from_mtls_auth(
-        credhub_url: credhub_url,
+        host: credhub_host,
+        port: credhub_port,
         client_cert_path: client_cert_path,
         client_key_path: client_key_path
       )
@@ -70,14 +78,15 @@ RSpec.describe CredHubble::Client do
 
     it 'allows the user to optionally supply a file path for the CredHub CA cert' do
       client = CredHubble::Client.new_from_mtls_auth(
-        credhub_url: credhub_url,
-        credhub_ca_path: credhub_ca_path,
+        host: credhub_host,
+        port: credhub_port,
+        ca_path: ca_path,
         client_cert_path: client_cert_path,
         client_key_path: client_key_path
       )
 
       expect(client.send(:credhub_url)).to eq(credhub_url)
-      expect(client.send(:credhub_ca_path)).to eq(credhub_ca_path)
+      expect(client.send(:ca_path)).to eq(ca_path)
       expect(client.send(:client_cert_path)).to eq(client_cert_path)
       expect(client.send(:client_key_path)).to eq(client_key_path)
       expect(client.send(:client_cert)).to eq(mock_cert)

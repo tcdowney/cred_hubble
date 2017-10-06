@@ -5,30 +5,33 @@ require 'openssl'
 
 module CredHubble
   class Client
-    def initialize(credhub_url:, auth_header_token: nil, credhub_ca_path: nil,
+    def initialize(host:, port: 8844, auth_header_token: nil, ca_path: nil,
                    client_cert_path: nil, client_key_path: nil)
 
-      @credhub_url = credhub_url
+      @host = host
+      @port = port
       @auth_header_token = auth_header_token
-      @credhub_ca_path = credhub_ca_path
+      @ca_path = ca_path
       @client_cert_path = client_cert_path
       @client_key_path = client_key_path
     end
 
-    def self.new_from_token_auth(credhub_url:, auth_header_token:, credhub_ca_path: nil)
+    def self.new_from_token_auth(host:, port: 8844, auth_header_token:, ca_path: nil)
       new(
         auth_header_token: auth_header_token,
-        credhub_ca_path: credhub_ca_path,
-        credhub_url: credhub_url
+        ca_path: ca_path,
+        host: host,
+        port: port
       )
     end
 
-    def self.new_from_mtls_auth(credhub_url:, client_cert_path:, client_key_path:, credhub_ca_path: nil)
+    def self.new_from_mtls_auth(host:, port: 8844, client_cert_path:, client_key_path:, ca_path: nil)
       new(
         client_cert_path: client_cert_path,
         client_key_path: client_key_path,
-        credhub_url: credhub_url,
-        credhub_ca_path: credhub_ca_path
+        host: host,
+        ca_path: ca_path,
+        port: port
       )
     end
 
@@ -67,13 +70,13 @@ module CredHubble
 
     private
 
-    attr_reader :auth_header_token, :client_cert_path, :client_key_path, :credhub_ca_path, :credhub_url
+    attr_reader :auth_header_token, :client_cert_path, :client_key_path, :ca_path, :host, :port
 
     def http_client
       CredHubble::Http::Client.new(
         credhub_url,
         auth_header_token: auth_header_token,
-        credhub_ca_path: credhub_ca_path,
+        ca_path: ca_path,
         client_cert: client_cert,
         client_key: client_key
       )
@@ -89,6 +92,10 @@ module CredHubble
       return unless client_key_path
 
       OpenSSL::PKey::RSA.new(File.read(client_key_path))
+    end
+
+    def credhub_url
+      Addressable::URI.new(scheme: 'https', host: host, port: port).to_s
     end
   end
 end

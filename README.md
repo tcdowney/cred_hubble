@@ -36,8 +36,7 @@ This gem currently supports the following CredHub endpoints:
 To try out the unauthenticated `info` and `health` endpoints, just do the following in your favorite Ruby console:
 
 ```ruby
-> credhub_url    = 'https://credhub.your-cloud-foundry.com:8844'
-> credhub_client = CredHubble::Client.new(credhub_url: credhub_url)
+> credhub_client = CredHubble::Client.new(host: 'credhub.your-cloud-foundry.com', port: '8844')
            
 > info = credhub_client.info
   => #<CredHubble::Resources::Info:0x00007fb36497a490 ...
@@ -57,10 +56,10 @@ Here are some examples:
 
 ### Authenticating with an oAuth2 header
 ```ruby
-> credhub_url    = 'https://credhub.your-cloud-foundry.com:8844'
 > auth_header    = 'eyJhbGc.....OiJSUzI1NiIsI' # omit any 'bearer' portion
 > credhub_client = CredHubble::Client.new_from_token_auth(
-                     credhub_url: credhub_url,
+                     host: 'credhub.your-cloud-foundry.com',
+                     port: '8844',
                      auth_header_token: auth_header
                    )
            
@@ -76,11 +75,11 @@ A typical Cloud Foundry application using CredHub will have access to two enviro
 CredHub's CA certificate should already have been placed in the app instance's trusted cert store by Diego.
 
 ```ruby
-> credhub_url      = 'https://credhub.your-cloud-foundry.com:8844'
 > client_cert_path = '/etc/cf-instance-credentials/instance.crt' # ENV['CF_INSTANCE_CERT']
 > client_key_path  = '/etc/cf-instance-credentials/instance.key' # ENV['CF_INSTANCE_KEY']
 > credhub_client   = CredHubble::Client.new_from_mtls_auth(
-                       credhub_url: credhub_url,
+                       host: 'credhub.your-cloud-foundry.com',
+                       port: '8844',
                        client_cert_path: client_cert_path,
                        client_key_path: client_key_path
                      )
@@ -93,13 +92,13 @@ CredHub's CA certificate should already have been placed in the app instance's t
 If your CredHub server is using a self-signed (or otherwise non-trusted by your system) certificate you can supply CredHubble with the path to a local copy of the signing CA certificate.
 
 ```ruby
-> credhub_url     = 'https://credhub.your-cloud-foundry.com:8844'
 > auth_header     = 'eyJhbGc.....OiJSUzI1NiIsI' # omit any 'bearer' portion
 > credhub_ca_path = '/some/path/certs/credhub_ca.crt'
 > credhub_client  = CredHubble::Client.new_from_token_auth(
-                      credhub_url: credhub_url,
+                      host: 'credhub.your-cloud-foundry.com',
+                      port: '8844',
                       auth_header_token: auth_header,
-                      credhub_ca_path: credhub_ca_path
+                      ca_path: credhub_ca_path
                     )
 
 > credential = credhub_client.credential_by_id('f8d5a201-c3b9-48ae-8bc4-3b86b42210a1')

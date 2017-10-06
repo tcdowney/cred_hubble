@@ -10,3 +10,5 @@ Metrics/CyclomaticComplexity:
   Max: 12
 Style/DoubleNegation:
   Enabled: false
+Metrics/ParameterLists:
+  CountKeywordArgs: false

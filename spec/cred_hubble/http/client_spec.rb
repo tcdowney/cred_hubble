@@ -239,12 +239,12 @@ RSpec.describe CredHubble::Http::Client do
     end
 
     context 'when a file path is provided for the CredHub CA' do
-      let(:credhub_ca_path) { '/custom/certstore/credhub_ca.crt' }
-      subject { CredHubble::Http::Client.new(url, credhub_ca_path: credhub_ca_path) }
+      let(:ca_path) { '/custom/certstore/credhub_ca.crt' }
+      subject { CredHubble::Http::Client.new(url, ca_path: ca_path) }
 
       it 'includes the CA cert file path in the connection ssl config' do
         connection = subject.send(:connection)
-        expect(connection.ssl.ca_file).to eq(credhub_ca_path)
+        expect(connection.ssl.ca_file).to eq(ca_path)
       end
     end
 
@@ -263,7 +263,7 @@ RSpec.describe CredHubble::Http::Client do
       end
 
       context 'when a client cert and client key are provided for the CredHub CA' do
-        let(:credhub_ca_path) { '/custom/certstore/credhub_ca.crt' }
+        let(:ca_path) { '/custom/certstore/credhub_ca.crt' }
         subject { CredHubble::Http::Client.new(url, client_cert: mock_cert, client_key: mock_key) }
 
         it 'includes the cert file in the connection ssl config' do
