@@ -2,7 +2,9 @@ require 'cred_hubble/resources/immutable_resource'
 
 module CredHubble
   module Resources
-    class Credential < ImmutableResource
+    class Credential < BaseResource
+      include Virtus.model
+
       TYPES = [
         VALUE_TYPE = 'value'.freeze,
         JSON_TYPE = 'json'.freeze,
@@ -17,6 +19,20 @@ module CredHubble
       attribute :name, String
       attribute :type, String
       attribute :version_created_at, String
+
+      def to_json(options = {})
+        attributes.to_json(options)
+      end
+
+      def attributes_for_put
+        attributes.delete_if { |k, _| immutable_attributes.include?(k) }
+      end
+
+      private
+
+      def immutable_attributes
+        %i[id version_created_at]
+      end
     end
   end
 end

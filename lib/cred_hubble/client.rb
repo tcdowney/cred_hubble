@@ -57,6 +57,14 @@ module CredHubble
       CredHubble::Resources::CredentialCollection.from_json(response)
     end
 
+    def put_credential(credential, overwrite: nil)
+      credential_body = credential.attributes_for_put
+      credential_body[:overwrite] = !!overwrite unless overwrite.nil?
+
+      response = http_client.put('/api/v1/data', credential_body.to_json).body
+      CredHubble::Resources::CredentialFactory.from_json(response)
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :credhub_ca_path, :credhub_url

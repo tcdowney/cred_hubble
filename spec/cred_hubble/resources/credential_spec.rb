@@ -7,10 +7,4 @@ RSpec.describe CredHubble::Resources::Credential do
     it_behaves_like 'a Credential resource'
     it_behaves_like 'a JSON deserializing resource'
   end
-
-  describe 'immutability' do
-    subject { CredHubble::Resources::Credential.new(name: '/the-grid') }
-
-    it_behaves_like 'an immutable resource', :name
-  end
 end

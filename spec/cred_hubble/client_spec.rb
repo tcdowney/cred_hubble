@@ -12,6 +12,7 @@ RSpec.describe CredHubble::Client do
   before do
     allow(CredHubble::Http::Client).to receive(:new).and_return(mock_http_client)
     allow(mock_http_client).to receive(:get).and_return(mock_response)
+    allow(mock_http_client).to receive(:put).and_return(mock_response)
   end
 
   describe '.new_from_token_auth' do
@@ -201,6 +202,50 @@ RSpec.describe CredHubble::Client do
           3e709d6e-585c-4526-ac0d-fe99316f2255
         ]
       )
+    end
+  end
+
+  describe '#put_credential' do
+    let(:new_credential) do
+      CredHubble::Resources::CertificateCredential.new(
+        name: '/load-balancer-tls-cert',
+        value: {
+          ca: "-----BEGIN CERTIFICATE-----\n... CA CERT ...\n-----END CERTIFICATE-----",
+          certificate: "-----BEGIN CERTIFICATE-----\n... CERTIFICATE ...\n-----END CERTIFICATE-----",
+          private_key: "-----BEGIN RSA PRIVATE KEY-----\n... RSA PRIVATE KEY ...\n-----END RSA PRIVATE KEY-----"
+        }
+      )
+    end
+    let(:response_body) do
+      '{
+          "id": "15811465-8538-460d-9682-5514d44439fd",
+          "name": "/load-balancer-tls-cert",
+          "type": "certificate",
+          "value": {
+            "ca": "-----BEGIN CERTIFICATE-----\n... CA CERT ...\n-----END CERTIFICATE-----",
+            "certificate": "-----BEGIN CERTIFICATE-----\n... CERTIFICATE ...\n-----END CERTIFICATE-----",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\n... RSA PRIVATE KEY ...\n-----END RSA PRIVATE KEY-----"
+          },
+          "version_created_at": "1990-01-05T01:01:01Z"
+        }'
+    end
+
+    it 'makes a PUT request to the /api/v1/data endpoint with the serialized credential' do
+      subject.put_credential(new_credential)
+      expect(mock_http_client).to have_received(:put).with('/api/v1/data', new_credential.attributes_for_put.to_json)
+    end
+
+    it 'accepts an optional overwrite parameter' do
+      subject.put_credential(new_credential, overwrite: true)
+      expect(mock_http_client)
+        .to have_received(:put).with('/api/v1/data', new_credential.attributes_for_put.merge(overwrite: true).to_json)
+    end
+
+    it 'returns a Credential resource' do
+      credential = subject.put_credential(new_credential)
+      expect(credential).to be_a(CredHubble::Resources::CertificateCredential)
+      expect(credential.name).to eq('/load-balancer-tls-cert')
+      expect(credential.version_created_at).to eq('1990-01-05T01:01:01Z')
     end
   end
 end
