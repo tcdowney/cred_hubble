@@ -1,8 +1,10 @@
 # CredHubble :full_moon_with_face::telescope::full_moon_with_face:
 
-Unofficial and **incomplete** Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential storage service.
+[![Build Status](https://travis-ci.org/tcdowney/cred_hubble.svg?branch=master)](https://travis-ci.org/tcdowney/cred_hubble)
 
-It only supports the unauthenticated `/info` and `/health` endpoints for now, but eventually this library will let your Ruby app fetch secrets (e.g. database creds, Rails session secrets, AWS access keys, etc.) from CredHub at runtime, meaning you'll no longer need to store them in plaintext config files or in your app's environment.
+Unofficial and **incomplete** Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential store.
+
+The gem only supports endpoints detailed in the [usage](#usage) section for now, but eventually this library will let your Ruby app fetch secrets (e.g. database creds, Rails session secrets, AWS access keys, etc.) from CredHub at runtime, meaning you'll no longer need to store them in plaintext config files or in your app's environment.
 
 That's the dream at least.
 
@@ -11,7 +13,7 @@ Right now this is just something I'm working on for fun since it's been a while 
 ## Installation
 
 Add this line to your application's Gemfile:
-There is a very very alpha release available on Ruby Gems, but it only supports the unauthenticated endpoints. A new release won't be published until I'm satisfied with the completeness of this library.
+There is a **very** alpha release available on Ruby Gems that I published to reserve the name, but it only supports the unauthenticated endpoints. A new release won't be published until I'm satisfied with the completeness of this library.
 
 ```ruby
 gem 'cred_hubble', git: 'https://github.com/tcdowney/cred_hubble'
