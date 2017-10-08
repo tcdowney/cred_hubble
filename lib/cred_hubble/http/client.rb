@@ -32,6 +32,12 @@ module CredHubble
         end
       end
 
+      def delete(path)
+        with_error_handling do
+          connection.delete(path)
+        end
+      end
+
       private
 
       attr_reader :auth_header_token, :client_cert, :client_key, :ca_path, :url

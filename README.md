@@ -93,6 +93,7 @@ CredHubble currently supports the following [CredHub endpoints](https://credhub-
 * **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
 * **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
 * **[PUT Credential](#put-credential):** `/api/v1/data`
+* **[DELETE Credential by Name](#delete-credential-by-name):** `/api/v1/data`
 * **[POST Interpolate Credentials](#post-interpolate-credentials):** `/api/v1/interpolate`
 
 
@@ -229,6 +230,21 @@ grant other parties various permissions for a given Credential, the `put_credent
   
 > credhub_client.put_credential(credential, additional_permissions: [permission])
   => #<CredHubble::Resources::UserCredential:0x00007fb322d676d0 ...
+````
+
+### DELETE Credential by Name
+The `delete_credential_by_name` method allows you to delete all versions of a Credential for the given name.
+
+```ruby
+> credentials = credhub_client.credentials_by_name('/admin-user-password')
+  => #<CredHubble::Resources::CredentialCollection:0x00007f @data=[#<CredHubble::Resources::PasswordCredential:0x00004a ...
+> credentials.count
+  => 3
+  
+> credhub_client.delete_credential_by_name('/admin-user-password')  
+  => true
+> credhub_client.credentials_by_name('/admin-user-password')
+  => CredHubble::Http::NotFoundError: status: 404, body: {"error":"The request could not be completed ...
 ````
 
 ### POST Interpolate Credentials

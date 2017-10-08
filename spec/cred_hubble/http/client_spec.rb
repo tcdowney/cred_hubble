@@ -304,6 +304,68 @@ RSpec.describe CredHubble::Http::Client do
     end
   end
 
+  describe '#delete' do
+    let(:path) { '/data' }
+    let(:status) { 204 }
+    let(:response_body) { '' }
+
+    before do
+      stub_request(:delete, "#{url}#{path}").to_return(status: status, body: response_body)
+    end
+
+    it 'makes a GET request to the requested url and path' do
+      response = subject.delete(path)
+      expect(response).to be_a(Faraday::Response)
+      expect(response.body).to eq(response_body)
+      expect(response.status).to eq(status)
+    end
+
+    describe 'error handling' do
+      subject { CredHubble::Http::Client.new(url).delete(path) }
+
+      context 'when a Faraday::SSLError occurs' do
+        let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
+        let(:fake_connection) { instance_double(Faraday::Connection) }
+
+        before do
+          allow_any_instance_of(CredHubble::Http::Client).to receive(:connection).and_return(fake_connection)
+          allow(fake_connection).to receive(:delete).and_raise(error)
+        end
+
+        it 'raises a CredHubble::Exceptions::SSLError' do
+          expect { subject }.to raise_error(CredHubble::Http::SSLError)
+        end
+      end
+
+      it_behaves_like 'a request with error handling'
+    end
+
+    describe 'request headers' do
+      context 'when client is initialized with an auth_token_header' do
+        let(:token) { 'some-oauth2-bearer-token' }
+        subject { CredHubble::Http::Client.new(url, auth_header_token: token) }
+
+        it 'includes an Authorization header with the provided bearer token' do
+          subject.delete(path)
+          assert_requested(
+            :delete,
+            "#{url}#{path}",
+            headers: { 'Content-Type' => 'application/json', 'Authorization' => "bearer #{token}" }
+          )
+        end
+      end
+
+      context 'when client is not initialized with an auth_token_header' do
+        subject { CredHubble::Http::Client.new(url) }
+
+        it 'does not include an authorization header' do
+          subject.delete(path)
+          assert_requested(:delete, "#{url}#{path}", headers: { 'Content-Type' => 'application/json' })
+        end
+      end
+    end
+  end
+
   describe 'SSL/TLS configuration' do
     subject { CredHubble::Http::Client.new(url) }
 

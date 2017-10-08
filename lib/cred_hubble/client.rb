@@ -86,6 +86,15 @@ module CredHubble
       http_client.post('/api/v1/interpolate', vcap_services_json).body
     end
 
+    def delete_credential_by_name(name)
+      template = Addressable::Template.new('/api/v1/data{?query*}')
+
+      query_args = { name: name }
+      path = template.expand(query: query_args).to_s
+
+      http_client.delete(path).success?
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :ca_path, :host, :port

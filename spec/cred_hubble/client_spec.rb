@@ -1,9 +1,12 @@
 require 'spec_helper'
 
 RSpec.describe CredHubble::Client do
-  let(:mock_http_client) { instance_double(CredHubble::Http::Client) }
-  let(:mock_response) { instance_double(Faraday::Response, body: response_body) }
   let(:response_body) { '{}' }
+  let(:response_status) { 200 }
+  let(:mock_http_client) { instance_double(CredHubble::Http::Client) }
+  let(:mock_response) do
+    instance_double(Faraday::Response, status: response_status, body: response_body, success?: true)
+  end
 
   let(:credhub_url) { 'https://credhub.cloudfoundry.com:8845' }
   let(:credhub_host) { 'credhub.cloudfoundry.com' }
@@ -16,6 +19,7 @@ RSpec.describe CredHubble::Client do
     allow(mock_http_client).to receive(:get).and_return(mock_response)
     allow(mock_http_client).to receive(:put).and_return(mock_response)
     allow(mock_http_client).to receive(:post).and_return(mock_response)
+    allow(mock_http_client).to receive(:delete).and_return(mock_response)
   end
 
   describe '.new_from_token_auth' do
@@ -448,6 +452,20 @@ RSpec.describe CredHubble::Client do
 
     it 'returns JSON with credhub-ref credentials populated' do
       expect(subject.interpolate_credentials(vcap_services_json)).to eq(response_body)
+    end
+  end
+
+  describe '#delete_credential_by_name' do
+    let(:response_body) { '' }
+    let(:response_status) { 204 }
+
+    it 'makes a DELETE request to the /api/v1/data endpoint with the name as a query parameter' do
+      subject.delete_credential_by_name('/outdated-credential')
+      expect(mock_http_client).to have_received(:delete).with('/api/v1/data?name=%2Foutdated-credential')
+    end
+
+    it 'returns true if the delete request was a success' do
+      expect(subject.delete_credential_by_name('/outdated-credential')).to be true
     end
   end
 end
