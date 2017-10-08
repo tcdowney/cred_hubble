@@ -85,7 +85,7 @@ If your CredHub server is using a self-signed (or otherwise non-trusted by your 
 
 ## Usage
 
-CredHubble currently supports the following CredHub endpoints:
+CredHubble currently supports the following [CredHub endpoints](https://credhub-api.cfapps.io):
 
 * **[GET Info](#get-info-and-get-health):** `/info`
 * **[GET Health](#get-info-and-get-health):** `/health`
@@ -93,6 +93,7 @@ CredHubble currently supports the following CredHub endpoints:
 * **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
 * **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
 * **[PUT Credential](#put-credential):** `/api/v1/data`
+* **[POST Interpolate Credentials](#post-interpolate-credentials):** `/api/v1/interpolate`
 
 
 ### GET Info and GET Health
@@ -149,6 +150,28 @@ You can retrieve only the most recent version of the credential using the `curre
 > credentials.map(&:id)
   => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5"]
 ```
+
+### GET Permissions by Credential Name
+
+You can use the `permissions_by_credential_name` method to view the list of permissions for a given Credential.
+
+```ruby
+> client.permissions_by_credential_name('/credential-name')
+  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
+        @credential_name="/credential-name",
+        @permissions=[
+          #<CredHubble::Resources::Permission:0x00007fa231c11f08
+              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
+              @operations=["read", "write", "delete"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11e18
+              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
+              @operations=["read"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11d00
+              @actor="uaa-client:some_uaa_client",
+              @operations=["read", "write", "delete", "read_acl", "write_acl"]>
+        ]>
+```
+
 
 ### PUT Credential
 You can create new Credentials using the `put_credential` method. If you wish to replace an already existing Credential, simply pass
@@ -208,25 +231,93 @@ grant other parties various permissions for a given Credential, the `put_credent
   => #<CredHubble::Resources::UserCredential:0x00007fb322d676d0 ...
 ````
 
-### GET Permissions by Credential Name
+### POST Interpolate Credentials
+Cloud Foundry applications traditionally access the credentials for any bound service instances through a `VCAP_SERVICES` environment variable.
+Nowadays, however, some Service Brokers are CredHub aware and may choose to store service instance credentials in CredHub.
+Apps bound to said services would only see `"credhub-ref"` key in place of actual credentials for that service instance. Here's an example `VCAP_SERVICES`:
 
-You can use the `permissions_by_credential_name` to view the list of permissions for a given Credential.
+```json
+{
+  "grid-config":[
+    {
+      "credentials":{
+        "credhub-ref":"/grid-config/users/kflynn"
+      },
+      "label":"grid-config",
+      "name":"config-server",
+      "plan":"digital-frontier",
+      "provider":null,
+      "syslog_drain_url":null,
+      "tags":[
+        "configuration",
+        "biodigital-jazz"
+      ],
+      "volume_mounts":[]
+    }
+  ],
+  "encomSQL":[
+    {
+      "credentials":{
+        "credhub-ref":"/encomSQL/db/users/63f7b900-982f-4f20-9213-6d270c3c58ea"
+      },
+        "label":"encom-db",
+      "name":"encom-enterprise-db",
+      "plan":"enterprise",
+      "provider":null,
+      "syslog_drain_url":null,
+      "tags":[
+        "database",
+        "sql"
+      ],
+      "volume_mounts":[]
+    }
+  ]
+}
+```
+
+Fortunately, CredHub supports an "interpolate" endpoint which allows an app to populate these values wholesale.
+Here's how a CF application might use CredHubble's `interpolate_credentials` method to do that via mTLS authentication:
 
 ```ruby
-> client.permissions_by_credential_name('/credential-name')
-  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
-        @credential_name="/credential-name",
-        @permissions=[
-          #<CredHubble::Resources::Permission:0x00007fa231c11f08
-              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
-              @operations=["read", "write", "delete"]>,
-          #<CredHubble::Resources::Permission:0x00007fa231c11e18
-              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
-              @operations=["read"]>,
-          #<CredHubble::Resources::Permission:0x00007fa231c11d00
-              @actor="uaa-client:some_uaa_client",
-              @operations=["read", "write", "delete", "read_acl", "write_acl"]>
-        ]>
+> client_cert_path = ENV['CF_INSTANCE_CERT']
+> client_key_path  = ENV['CF_INSTANCE_KEY']
+> credhub_client   = CredHubble::Client.new_from_mtls_auth(
+                       host: 'credhub.your-cloud-foundry.com',
+                       port: '8844',
+                       client_cert_path: client_cert_path,
+                       client_key_path: client_key_path
+                     )
+           
+> interpolated_services_json = credhub_client.interpolate_credentials(ENV['VCAP_SERVICES'])
+  => '{
+       "grid-config":[
+         {
+           "credentials":{
+             "username":"kflynn",
+             "password":"FlynnLives"
+           },
+           "label":"grid-config",
+           "name":"config-server",
+           "plan":"digital-frontier",
+           "provider":null,
+           "syslog_drain_url":null,
+           "tags":[
+             "configuration",
+             "biodigital-jazz"
+           ],
+           "volume_mounts":[]
+         }
+       ],
+       "encomSQL":[
+         {
+           "credentials":{
+             "username":"grid-db-user",
+             "password":"p4ssw0rd"
+           },
+           ... abridged ...
+         }
+       ]
+     }'
 ```
 
 ## Development

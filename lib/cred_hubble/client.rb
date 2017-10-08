@@ -82,6 +82,10 @@ module CredHubble
       CredHubble::Resources::CredentialFactory.from_json(response)
     end
 
+    def interpolate_credentials(vcap_services_json)
+      http_client.post('/api/v1/interpolate', vcap_services_json).body
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :ca_path, :host, :port

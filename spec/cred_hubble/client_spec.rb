@@ -15,6 +15,7 @@ RSpec.describe CredHubble::Client do
     allow(CredHubble::Http::Client).to receive(:new).and_return(mock_http_client)
     allow(mock_http_client).to receive(:get).and_return(mock_response)
     allow(mock_http_client).to receive(:put).and_return(mock_response)
+    allow(mock_http_client).to receive(:post).and_return(mock_response)
   end
 
   describe '.new_from_token_auth' do
@@ -357,6 +358,96 @@ RSpec.describe CredHubble::Client do
       expect(credential).to be_a(CredHubble::Resources::CertificateCredential)
       expect(credential.name).to eq('/load-balancer-tls-cert')
       expect(credential.version_created_at).to eq('1990-01-05T01:01:01Z')
+    end
+  end
+
+  describe '#interpolate_credentials' do
+    let(:vcap_services_json) do
+      '{
+        "grid-config":[
+          {
+            "credentials":{
+              "credhub-ref":"/grid-config/users/kflynn"
+            },
+            "label":"grid-config",
+            "name":"config-server",
+            "plan":"digital-frontier",
+            "provider":null,
+            "syslog_drain_url":null,
+            "tags":[
+              "configuration",
+              "biodigital-jazz"
+            ],
+            "volume_mounts":[]
+          }
+        ],
+        "encomSQL":[
+          {
+            "credentials":{
+              "credhub-ref":"/encomSQL/db/users/63f7b900-982f-4f20-9213-6d270c3c58ea"
+            },
+            "label":"encom-db",
+            "name":"encom-enterprise-db",
+            "plan":"enterprise",
+            "provider":null,
+            "syslog_drain_url":null,
+            "tags":[
+              "database",
+              "sql"
+            ],
+            "volume_mounts":[]
+          }
+        ]
+      }'
+    end
+    let(:response_body) do
+      '{
+        "grid-config":[
+          {
+            "credentials":{
+              "username":"kflynn",
+              "password":"FlynnLives"
+            },
+            "label":"grid-config",
+            "name":"config-server",
+            "plan":"digital-frontier",
+            "provider":null,
+            "syslog_drain_url":null,
+            "tags":[
+              "configuration",
+              "biodigital-jazz"
+            ],
+            "volume_mounts":[]
+          }
+        ],
+        "encomSQL":[
+          {
+            "credentials":{
+              "username":"grid-db-user",
+              "password":"p4ssw0rd"
+            },
+            "label":"encom-db",
+            "name":"encom-enterprise-db",
+            "plan":"enterprise",
+            "provider":null,
+            "syslog_drain_url":null,
+            "tags":[
+              "database",
+              "sql"
+            ],
+            "volume_mounts":[]
+          }
+        ]
+      }'
+    end
+
+    it 'makes a POST request to the /api/v1/interpolate endpoint with the provided json' do
+      subject.interpolate_credentials(vcap_services_json)
+      expect(mock_http_client).to have_received(:post).with('/api/v1/interpolate', vcap_services_json)
+    end
+
+    it 'returns JSON with credhub-ref credentials populated' do
+      expect(subject.interpolate_credentials(vcap_services_json)).to eq(response_body)
     end
   end
 end

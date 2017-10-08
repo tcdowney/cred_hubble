@@ -20,6 +20,12 @@ module CredHubble
         end
       end
 
+      def post(path, body)
+        with_error_handling do
+          connection.post(path, body)
+        end
+      end
+
       def put(path, body)
         with_error_handling do
           connection.put(path, body)

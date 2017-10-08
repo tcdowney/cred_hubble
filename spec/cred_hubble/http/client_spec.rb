@@ -95,7 +95,7 @@ RSpec.describe CredHubble::Http::Client do
     describe 'error handling' do
       subject { CredHubble::Http::Client.new(url).get(path) }
 
-      context 'when a Faraday::SSLError occurrs' do
+      context 'when a Faraday::SSLError occurs' do
         let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
         let(:fake_connection) { instance_double(Faraday::Connection) }
 
@@ -172,7 +172,7 @@ RSpec.describe CredHubble::Http::Client do
     describe 'error handling' do
       subject { CredHubble::Http::Client.new(url).put(path, request_body) }
 
-      context 'when a Faraday::SSLError occurrs' do
+      context 'when a Faraday::SSLError occurs' do
         let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
         let(:fake_connection) { instance_double(Faraday::Connection) }
 
@@ -212,6 +212,89 @@ RSpec.describe CredHubble::Http::Client do
           subject.put(path, request_body)
           assert_requested(
             :put,
+            "#{url}#{path}",
+            body: request_body,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+        end
+      end
+    end
+  end
+
+  describe '#post' do
+    let(:path) { '/api/v1/data' }
+    let(:status) { 200 }
+    let(:request_body) do
+      '{
+        "name": "/ron-dunn",
+        "type": "value",
+        "value": "is that your name or are you telling me you\'re finished talking?"
+      }'
+    end
+    let(:response_body) do
+      '{
+        "id": "62630719-2413-4332-9e39-a8acbd73d3b7",
+        "name": "/ron-dunn",
+        "type": "value",
+        "value": "is that your name or are you telling me you\'re finished talking?",
+        "version_created_at": "2017-01-01T04:07:18Z"
+      }'
+    end
+
+    before do
+      stub_request(:post, "#{url}#{path}").with(body: request_body).to_return(status: status, body: response_body)
+    end
+
+    it 'makes a POST request with the given body to the requested url and path' do
+      response = subject.post(path, request_body)
+      expect(response).to be_a(Faraday::Response)
+      expect(response.body).to eq(response_body)
+      expect(response.status).to eq(status)
+    end
+
+    describe 'error handling' do
+      subject { CredHubble::Http::Client.new(url).post(path, request_body) }
+
+      context 'when a Faraday::SSLError occurs' do
+        let(:error) { Faraday::SSLError.new('SSL_connect returned=1 errno=0 state=error: certificate verify failed') }
+        let(:fake_connection) { instance_double(Faraday::Connection) }
+
+        before do
+          allow_any_instance_of(CredHubble::Http::Client).to receive(:connection).and_return(fake_connection)
+          allow(fake_connection).to receive(:post).and_raise(error)
+        end
+
+        it 'raises a CredHubble::Exceptions::SSLError' do
+          expect { subject }.to raise_error(CredHubble::Http::SSLError)
+        end
+      end
+
+      it_behaves_like 'a request with error handling'
+    end
+
+    describe 'request headers' do
+      context 'when client is initialized with an auth_token_header' do
+        let(:token) { 'meesa-jar-jar-binks-token' }
+        subject { CredHubble::Http::Client.new(url, auth_header_token: token) }
+
+        it 'includes an Authorization header with the provided bearer token' do
+          subject.post(path, request_body)
+          assert_requested(
+            :post,
+            "#{url}#{path}",
+            body: request_body,
+            headers: { 'Content-Type' => 'application/json', 'Authorization' => "bearer #{token}" }
+          )
+        end
+      end
+
+      context 'when client is not initialized with an auth_token_header' do
+        subject { CredHubble::Http::Client.new(url) }
+
+        it 'does not include an authorization header' do
+          subject.post(path, request_body)
+          assert_requested(
+            :post,
             "#{url}#{path}",
             body: request_body,
             headers: { 'Content-Type' => 'application/json' }
