@@ -91,6 +91,7 @@ CredHubble currently supports the following CredHub endpoints:
 * **[GET Health](#get-info-and-get-health):** `/health`
 * **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
 * **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
+* **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
 * **[PUT Credential](#put-credential):** `/api/v1/data`
 
 
@@ -187,6 +188,46 @@ the `credentials_by_name` method.
                   @version_created_at="2017-10-06T05:11:43Z">
 ````
 
+By default, only the creator of a Credential has access to read, write, delete, view its ACL, or updates its ACL. If you wish to
+grant other parties various permissions for a given Credential, the `put_credential` method takes an optional `additional_permissions` array.
+
+```ruby
+> credential = CredHubble::Resources::UserCredential.new(
+                    name: '/foundry-fred-user',
+                    value: {username: 'foundy_fred', password: 's3cr3t'}
+               )   
+  => #<CredHubble::Resources::UserCredential:0x00007fb322caf3f0 @name="/foundry-fred-user", @value=#<CredHubble::Resources::UserValue ...
+  
+> permission = CredHubble::Resources::Permission.new(
+                 actor: 'uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47',
+                 operations: ['write', 'read']
+               )
+  => #<CredHubble::Resources::Permission:0x00007f @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47", @operations=["write", "read"]>
+  
+> credhub_client.put_credential(credential, additional_permissions: [permission])
+  => #<CredHubble::Resources::UserCredential:0x00007fb322d676d0 ...
+````
+
+### GET Permissions by Credential Name
+
+You can use the `permissions_by_credential_name` to view the list of permissions for a given Credential.
+
+```ruby
+> client.permissions_by_credential_name('/credential-name')
+  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
+        @credential_name="/credential-name",
+        @permissions=[
+          #<CredHubble::Resources::Permission:0x00007fa231c11f08
+              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
+              @operations=["read", "write", "delete"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11e18
+              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
+              @operations=["read"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11d00
+              @actor="uaa-client:some_uaa_client",
+              @operations=["read", "write", "delete", "read_acl", "write_acl"]>
+        ]>
+```
 
 ## Development
 
