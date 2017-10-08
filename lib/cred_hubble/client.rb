@@ -95,6 +95,11 @@ module CredHubble
       http_client.delete(path).success?
     end
 
+    def add_permissions(permission_collection)
+      response = http_client.post('/api/v1/permissions', permission_collection.to_json).body
+      CredHubble::Resources::PermissionCollection.from_json(response)
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :ca_path, :host, :port
