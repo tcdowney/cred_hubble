@@ -1,4 +1,4 @@
-require 'cred_hubble/resources/immutable_resource'
+require 'cred_hubble/resources/base_resource'
 
 module CredHubble
   module Resources
@@ -19,10 +19,6 @@ module CredHubble
       attribute :name, String
       attribute :type, String
       attribute :version_created_at, String
-
-      def to_json(options = {})
-        attributes.to_json(options)
-      end
 
       def attributes_for_put
         attributes.delete_if { |k, _| immutable_attributes.include?(k) }

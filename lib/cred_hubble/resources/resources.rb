@@ -10,3 +10,6 @@ require 'cred_hubble/resources/user_credential'
 require 'cred_hubble/resources/certificate_credential'
 require 'cred_hubble/resources/rsa_credential'
 require 'cred_hubble/resources/ssh_credential'
+
+require 'cred_hubble/resources/permission'
+require 'cred_hubble/resources/permission_collection'

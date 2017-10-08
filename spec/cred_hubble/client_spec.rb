@@ -214,6 +214,52 @@ RSpec.describe CredHubble::Client do
     end
   end
 
+  describe '#permissions_by_credential_name' do
+    let(:response_body) do
+      '{
+        "credential_name": "/uaa-client-creds",
+        "permissions":[
+          {
+            "actor": "mtls-app:5532f504-bb27-43e1-94e9-bad794238f17",
+            "operations": [
+              "read",
+              "write",
+              "delete",
+              "read_acl",
+              "write_acl"
+            ]
+          },
+          {
+            "actor": "uaa-user:b2449249-5b51-4893-ab76-648763653c38",
+            "operations": [
+              "read",
+              "write",
+              "delete",
+              "read_acl",
+              "write_acl"
+            ]
+          }
+        ]
+      }'
+    end
+
+    it 'makes a request to the /api/v1/permissions endpoint with the credential_name as a query parameter' do
+      subject.permissions_by_credential_name('/uaa-client-creds')
+      expect(mock_http_client).to have_received(:get).with('/api/v1/permissions?credential_name=%2Fuaa-client-creds')
+    end
+
+    it 'returns a PermissionCollection' do
+      permissions = subject.permissions_by_credential_name('/uaa-client-creds')
+      expect(permissions).to all(be_a(CredHubble::Resources::Permission))
+      expect(permissions.map(&:actor)).to match_array(
+        %w[
+          mtls-app:5532f504-bb27-43e1-94e9-bad794238f17
+          uaa-user:b2449249-5b51-4893-ab76-648763653c38
+        ]
+      )
+    end
+  end
+
   describe '#put_credential' do
     let(:new_credential) do
       CredHubble::Resources::CertificateCredential.new(

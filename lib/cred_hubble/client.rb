@@ -60,6 +60,16 @@ module CredHubble
       CredHubble::Resources::CredentialCollection.from_json(response)
     end
 
+    def permissions_by_credential_name(credential_name)
+      template = Addressable::Template.new('/api/v1/permissions{?query*}')
+
+      query_args = { credential_name: credential_name }
+      path = template.expand(query: query_args).to_s
+
+      response = http_client.get(path).body
+      CredHubble::Resources::PermissionCollection.from_json(response)
+    end
+
     def put_credential(credential, overwrite: nil)
       credential_body = credential.attributes_for_put
       credential_body[:overwrite] = !!overwrite unless overwrite.nil?
