@@ -13,6 +13,10 @@ module CredHubble
       def each(&block)
         permissions.each(&block)
       end
+
+      def empty?
+        permissions.empty?
+      end
     end
   end
 end

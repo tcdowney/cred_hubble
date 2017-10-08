@@ -70,9 +70,13 @@ module CredHubble
       CredHubble::Resources::PermissionCollection.from_json(response)
     end
 
-    def put_credential(credential, overwrite: nil)
+    def put_credential(credential, overwrite: nil, additional_permissions: [])
       credential_body = credential.attributes_for_put
       credential_body[:overwrite] = !!overwrite unless overwrite.nil?
+
+      unless additional_permissions.empty?
+        credential_body[:additional_permissions] = additional_permissions.map(&:attributes)
+      end
 
       response = http_client.put('/api/v1/data', credential_body.to_json).body
       CredHubble::Resources::CredentialFactory.from_json(response)

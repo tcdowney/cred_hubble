@@ -64,4 +64,24 @@ RSpec.describe CredHubble::Resources::PermissionCollection do
       )
     end
   end
+
+  describe '#empty?' do
+    context 'when there are permissions' do
+      it 'returns false ' do
+        expect(subject.empty?).to be false
+      end
+    end
+
+    context 'when are not any permissions' do
+      let(:json) do
+        '{
+          "credential_name": "/uaa-client-credentials",
+          "permissions":[]
+        }'
+      end
+      it 'returns true ' do
+        expect(subject.empty?).to be true
+      end
+    end
+  end
 end

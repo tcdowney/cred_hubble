@@ -296,6 +296,62 @@ RSpec.describe CredHubble::Client do
         .to have_received(:put).with('/api/v1/data', new_credential.attributes_for_put.merge(overwrite: true).to_json)
     end
 
+    describe 'additional_permissions parameter' do
+      let(:permission_one) do
+        CredHubble::Resources::Permission.new(
+          actor: 'uaa-user:18f64563-bcfe-4c88-bf73-05c9ad3654c8',
+          operations: %w[write delete]
+        )
+      end
+      let(:permission_two) do
+        CredHubble::Resources::Permission.new(
+          actor: 'uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47',
+          operations: %w[write read]
+        )
+      end
+      let(:expected_request_body) do
+        JSON.parse('{
+          "name": "/load-balancer-tls-cert",
+          "type": "certificate",
+          "value": {
+            "ca": "-----BEGIN CERTIFICATE-----\n... CA CERT ...\n-----END CERTIFICATE-----",
+            "certificate": "-----BEGIN CERTIFICATE-----\n... CERTIFICATE ...\n-----END CERTIFICATE-----",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\n... RSA PRIVATE KEY ...\n-----END RSA PRIVATE KEY-----"
+          },
+          "additional_permissions": [
+            {
+              "actor": "uaa-user:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
+              "operations": [
+                "write",
+                "delete"
+              ]
+            },
+            {
+              "actor": "uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
+              "operations": [
+                "write",
+                "read"
+              ]
+            }
+          ]
+        }').to_json
+      end
+
+      it 'works with a PermissionCollection' do
+        permissions = CredHubble::Resources::PermissionCollection.new(permissions: [permission_one, permission_two])
+        subject.put_credential(new_credential, additional_permissions: permissions)
+        expect(mock_http_client).to have_received(:put)
+          .with('/api/v1/data', expected_request_body)
+      end
+
+      it 'works with a simple array of Permission objects' do
+        permissions = [permission_one, permission_two]
+        subject.put_credential(new_credential, additional_permissions: permissions)
+        expect(mock_http_client).to have_received(:put)
+          .with('/api/v1/data', expected_request_body)
+      end
+    end
+
     it 'returns a Credential resource' do
       credential = subject.put_credential(new_credential)
       expect(credential).to be_a(CredHubble::Resources::CertificateCredential)
