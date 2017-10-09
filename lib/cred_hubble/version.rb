@@ -1,3 +1,3 @@
 module CredHubble
-  VERSION = '0.0.1.pre'.freeze
+  VERSION = '0.1.0.pre'.freeze
 end

@@ -12,9 +12,10 @@ Right now this is just something I'm working on for fun since it's been a while 
 
 ## Installation
 
-Add this line to your application's Gemfile:
-There is a **very** alpha release available on Ruby Gems that I published to reserve the name, but it only supports the unauthenticated endpoints. A new release won't be published until I'm satisfied with the completeness of this library.
+There is a `0.1.0.pre` release available on Ruby Gems that you can install which handles quite a few CredHub endpoints.
+I'd like to implement a few more endpoints, do some additional polishing, and add better documentation before taking off the `.pre` suffix, though.
 
+To pick up the latest changes, add this line to your application's Gemfile:
 ```ruby
 gem 'cred_hubble', git: 'https://github.com/tcdowney/cred_hubble'
 ```
