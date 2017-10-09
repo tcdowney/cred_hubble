@@ -515,4 +515,22 @@ RSpec.describe CredHubble::Client do
       )
     end
   end
+
+  describe '#delete_permissions' do
+    let(:response_body) { '' }
+    let(:response_status) { 204 }
+
+    it 'makes a DELETE request to the /api/v1/data endpoint with the name as a query parameter' do
+      subject.delete_permissions('/some-credential', 'mtls-app:f3a7e791-4c61-4502-8a8c-cd8a4595641c')
+      expect(mock_http_client).to have_received(:delete).with(
+        '/api/v1/permissions?credential_name=%2Fsome-credential&actor=mtls-app%3Af3a7e791-4c61-4502-8a8c-cd8a4595641c'
+      )
+    end
+
+    it 'returns true if the delete request was a success' do
+      expect(
+        subject.delete_permissions('/some-credential', 'mtls-app:f3a7e791-4c61-4502-8a8c-cd8a4595641c')
+      ).to be true
+    end
+  end
 end

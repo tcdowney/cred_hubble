@@ -3,6 +3,7 @@ require 'cred_hubble/resources/resources'
 require 'cred_hubble/http/client'
 require 'openssl'
 
+# rubocop:disable ClassLength
 module CredHubble
   class Client
     def initialize(host:, port: 8844, auth_header_token: nil, ca_path: nil,
@@ -100,6 +101,15 @@ module CredHubble
       CredHubble::Resources::PermissionCollection.from_json(response)
     end
 
+    def delete_permissions(credential_name, actor)
+      template = Addressable::Template.new('/api/v1/permissions{?query*}')
+
+      query_args = { credential_name: credential_name, actor: actor }
+      path = template.expand(query: query_args).to_s
+
+      http_client.delete(path).success?
+    end
+
     private
 
     attr_reader :auth_header_token, :client_cert_path, :client_key_path, :ca_path, :host, :port
@@ -131,3 +141,4 @@ module CredHubble
     end
   end
 end
+# rubocop:enable ClassLength

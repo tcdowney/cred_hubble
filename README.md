@@ -89,12 +89,18 @@ CredHubble currently supports the following [CredHub endpoints](https://credhub-
 
 * **[GET Info](#get-info-and-get-health):** `/info`
 * **[GET Health](#get-info-and-get-health):** `/health`
+
+
 * **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
 * **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
-* **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
 * **[PUT Credential](#put-credential):** `/api/v1/data`
 * **[DELETE Credential by Name](#delete-credential-by-name):** `/api/v1/data`
 * **[POST Interpolate Credentials](#post-interpolate-credentials):** `/api/v1/interpolate`
+
+
+* **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
+* **[POST Add Permissions](#post-add-permissions):** `/api/v1/permissions`
+* **[DELETE Delete Permissions](#delete-delete-permissions):** `/api/v1/permissions?credential_name=<credential-name>&actor=<actor>`
 
 
 ### GET Info and GET Health
@@ -151,28 +157,6 @@ You can retrieve only the most recent version of the credential using the `curre
 > credentials.map(&:id)
   => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5"]
 ```
-
-### GET Permissions by Credential Name
-
-You can use the `permissions_by_credential_name` method to view the list of permissions for a given Credential.
-
-```ruby
-> client.permissions_by_credential_name('/credential-name')
-  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
-        @credential_name="/credential-name",
-        @permissions=[
-          #<CredHubble::Resources::Permission:0x00007fa231c11f08
-              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
-              @operations=["read", "write", "delete"]>,
-          #<CredHubble::Resources::Permission:0x00007fa231c11e18
-              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
-              @operations=["read"]>,
-          #<CredHubble::Resources::Permission:0x00007fa231c11d00
-              @actor="uaa-client:some_uaa_client",
-              @operations=["read", "write", "delete", "read_acl", "write_acl"]>
-        ]>
-```
-
 
 ### PUT Credential
 You can create new Credentials using the `put_credential` method. If you wish to replace an already existing Credential, simply pass
@@ -334,6 +318,75 @@ Here's how a CF application might use CredHubble's `interpolate_credentials` met
          }
        ]
      }'
+```
+
+### GET Permissions by Credential Name
+
+You can use the `permissions_by_credential_name` method to view the list of permissions for a given Credential.
+
+```ruby
+> credhub_client.permissions_by_credential_name('/credential-name')
+  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
+        @credential_name="/credential-name",
+        @permissions=[
+          #<CredHubble::Resources::Permission:0x00007fa231c11f08
+              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
+              @operations=["read", "write", "delete"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11e18
+              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
+              @operations=["read"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11d00
+              @actor="uaa-client:some_uaa_client",
+              @operations=["read", "write", "delete", "read_acl", "write_acl"]>
+        ]>
+```
+
+### POST Add Permissions
+
+You can use the `add_permissions` method to add additional permissions to an existing Credential.
+
+```ruby
+> credhub_client.permissions_by_credential_name('/my-awesome-credential').count
+  => 2
+  
+> new_permission = CredHubble::Resources::Permission.new(actor: 'uaa-user:b2449249', operations: ['read'])
+> new_permission_collection = CredHubble::Resources::PermissionCollection.new(
+                                credential_name: '/my-awesome-credential',
+                                permissions: [new_permission]
+                              )
+                       
+> credhub_client.add_permissions(new_permission_collection)
+  => #<CredHubble::Resources::PermissionCollection:0x00007fa231c12020
+        @credential_name="/my-awesome-credential",
+        @permissions=[
+          #<CredHubble::Resources::Permission:0x00007fa231c11f08
+              @actor="uaa-user:82f8ff1a-fcf8-4221-8d6b-0a1d579b6e47",
+              @operations=["read", "write", "delete"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11e18
+              @actor="mtls-app:18f64563-bcfe-4c88-bf73-05c9ad3654c8",
+              @operations=["read"]>,
+          #<CredHubble::Resources::Permission:0x00007fa231c11d00
+              @actor="uaa-user:b2449249",
+              @operations=["read"]>
+        ]>
+        
+> credhub_client.permissions_by_credential_name('/my-awesome-credential').count
+  => 3
+```
+
+### DELETE Delete Permissions
+
+You can remove any permissions for a given actor from a credential with the `delete_permissions` method which takes a `credential_name` and `actor`.
+
+```ruby
+> credhub_client.permissions_by_credential_name('/my-awesome-credential').count
+  => 3
+  
+> credhub_client.delete_permissions('/my-awesome-credential', 'uaa-user:b2449249')
+  => true
+        
+> credhub_client.permissions_by_credential_name('/my-awesome-credential').count
+  => 2
 ```
 
 ## Development
