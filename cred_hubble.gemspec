@@ -20,6 +20,8 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ['lib']
 
+  spec.required_ruby_version = '~> 2.1'
+
   spec.add_runtime_dependency 'faraday', ['>= 0.13', '< 1.0']
   spec.add_runtime_dependency 'virtus', ['>= 1.0', '< 2.0']
   spec.add_runtime_dependency 'addressable', '~> 2.0'

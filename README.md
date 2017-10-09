@@ -1,6 +1,6 @@
 # CredHubble :full_moon_with_face::telescope::full_moon_with_face:
 
-[![Build Status](https://travis-ci.org/tcdowney/cred_hubble.svg?branch=master)](https://travis-ci.org/tcdowney/cred_hubble)
+[![Gem Version](https://badge.fury.io/rb/cred_hubble.svg)](https://badge.fury.io/rb/cred_hubble) [![Build Status](https://travis-ci.org/tcdowney/cred_hubble.svg?branch=master)](https://travis-ci.org/tcdowney/cred_hubble)
 
 Unofficial and **incomplete** Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential store.
 
