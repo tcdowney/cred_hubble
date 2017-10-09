@@ -1,10 +1,8 @@
-require 'cred_hubble/resources/base_resource'
+require 'cred_hubble/resources/rest_resource'
 
 module CredHubble
   module Resources
-    class Permission < BaseResource
-      include Virtus.model
-
+    class Permission < Resource
       attribute :actor, String
       attribute :operations, Array[String]
     end

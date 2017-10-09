@@ -1,10 +1,8 @@
-require 'cred_hubble/resources/base_resource'
+require 'cred_hubble/resources/resource'
 
 module CredHubble
   module Resources
-    class Credential < BaseResource
-      include Virtus.model
-
+    class Credential < Resource
       TYPES = [
         VALUE_TYPE = 'value'.freeze,
         JSON_TYPE = 'json'.freeze,

@@ -1,11 +1,10 @@
-require 'cred_hubble/resources/base_resource'
+require 'cred_hubble/resources/rest_resource'
 require 'cred_hubble/resources/permission'
 
 module CredHubble
   module Resources
-    class PermissionCollection < BaseResource
+    class PermissionCollection < Resource
       include Enumerable
-      include Virtus.model
 
       attribute :credential_name, String
       attribute :permissions, Array[Permission]

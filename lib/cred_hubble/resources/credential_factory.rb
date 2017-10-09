@@ -1,4 +1,4 @@
-require 'cred_hubble/resources/base_resource'
+require 'cred_hubble/resources/rest_resource'
 require 'cred_hubble/resources/credential'
 require 'cred_hubble/resources/value_credential'
 require 'cred_hubble/resources/json_credential'
@@ -10,7 +10,7 @@ require 'cred_hubble/resources/ssh_credential'
 
 module CredHubble
   module Resources
-    class CredentialFactory < BaseResource
+    class CredentialFactory < RestResource
       def self.from_json(raw_json)
         parsed_json = parse_json(raw_json)
         credential_from_data(parsed_json)

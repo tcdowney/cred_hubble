@@ -6,7 +6,7 @@ module CredHubble
   module Resources
     class JsonParseError < CredHubble::Exceptions::Error; end
 
-    class BaseResource
+    class RestResource
       def self.from_json(json)
         new(parse_json(json))
       end

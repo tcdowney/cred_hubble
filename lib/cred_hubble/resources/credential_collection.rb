@@ -1,9 +1,9 @@
-require 'cred_hubble/resources/base_resource'
+require 'cred_hubble/resources/rest_resource'
 require 'cred_hubble/resources/credential_factory'
 
 module CredHubble
   module Resources
-    class CredentialCollection < BaseResource
+    class CredentialCollection < Resource
       include Enumerable
 
       def initialize(value_hash)

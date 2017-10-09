@@ -3,8 +3,8 @@ require 'virtus'
 
 module CredHubble
   module Resources
-    class ImmutableResource < RestResource
-      include ::Virtus.value_object
+    class Resource < RestResource
+      include ::Virtus.model
     end
   end
 end
