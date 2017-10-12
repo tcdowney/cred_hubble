@@ -103,6 +103,15 @@ module CredHubble
       CredHubble::Resources::CredentialCollection.from_json(response)
     end
 
+    # Retrieves the value of the current Credential for the given name
+    #
+    # @param credential_name [String] a CredHub credential name, e.g '/my-credential'
+    # @return [String, Hash, RsaValue, SshValue, UserValue, CertificateValue, nil] the Credential#value if it exists
+    def current_credential_value(credential_name)
+      current_credential = credentials_by_name(credential_name, current: true).first
+      current_credential && current_credential.value
+    end
+
     # Retrieves a collection of Permissions for a Credential by Credential Name.
     #
     # @param credential_name [String] a CredHub credential name, e.g '/my-credential'

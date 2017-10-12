@@ -219,6 +219,49 @@ RSpec.describe CredHubble::Client do
     end
   end
 
+  describe '#current_credential_value' do
+    let(:response_body) do
+      '{
+        "data":[
+          {
+            "type":"user",
+            "version_created_at":"2017-10-03T04:12:21Z",
+            "id":"5298e0e4-c3f5-4c73-a156-9ffce4c137f5",
+            "name":"/trade-federation-admin",
+            "value": {
+              "username": "roger_roger",
+              "password": "2582aaf15ec84e3fa3ba682152663a52",
+              "password_hash": "3638fbae81358ff9020be1d7a9a509fc6:1234"
+            }
+          }
+        ]
+      }'
+    end
+
+    it 'makes a request to the /api/v1/data endpoint with the name as a query parameter' do
+      subject.current_credential_value('/trade-federation-admin')
+      expect(mock_http_client).to have_received(:get).with('/api/v1/data?name=%2Ftrade-federation-admin&current=true')
+    end
+
+    context 'when a credential for the given name exists' do
+      it 'returns the credential value' do
+        credential_value = subject.current_credential_value('/trade-federation-admin')
+        expect(credential_value.username).to eq('roger_roger')
+        expect(credential_value.password).to eq('2582aaf15ec84e3fa3ba682152663a52')
+        expect(credential_value.password_hash).to eq('3638fbae81358ff9020be1d7a9a509fc6:1234')
+      end
+    end
+
+    context 'when a credential for the given name does not exist' do
+      let(:response_body) { '{"data":[]}' }
+
+      it 'returns nil' do
+        credential_value = subject.current_credential_value('/trade-federation-admin')
+        expect(credential_value).to be_nil
+      end
+    end
+  end
+
   describe '#permissions_by_credential_name' do
     let(:response_body) do
       '{
