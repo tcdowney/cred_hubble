@@ -2,22 +2,20 @@
 
 [![Gem Version](https://badge.fury.io/rb/cred_hubble.svg)](https://badge.fury.io/rb/cred_hubble) [![Build Status](https://travis-ci.org/tcdowney/cred_hubble.svg?branch=master)](https://travis-ci.org/tcdowney/cred_hubble)
 
-Unofficial and **incomplete** Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential store.
+Unofficial Ruby client for storing and fetching credentials from a [Cloud Foundry CredHub](https://github.com/cloudfoundry-incubator/credhub) credential store.
+The goal of this gem is to make it easier for Ruby apps (Rails, Sinatra, etc.) deployed on Cloud Foundry to store and retrieve secrets (e.g. Rails session_token_base, database credentials, AWS keys, etc.).
+For a more concrete example of usage, I've written a blog post on how one might [use CredHubble with a Rails app](https://downey.io/blog/securing-rails-credentials-cloud-foundry-credhub/).
 
-The gem only supports endpoints detailed in the [usage](#usage) section for now, but eventually this library will let your Ruby app fetch secrets (e.g. database creds, Rails session secrets, AWS access keys, etc.) from CredHub at runtime, meaning you'll no longer need to store them in plaintext config files or in your app's environment.
+CredHubble is just something I work on in my spare time for fun and is not feature-complete, but it should get the job mostly done.
+If you do end up using it and find any bugs or would like to see more functionality, feel free to [submit a PR](https://github.com/tcdowney/cred_hubble/pulls) or [log an issue](https://github.com/tcdowney/cred_hubble/issues).
 
-That's the dream at least.
-
-Right now this is just something I'm working on for fun since it's been a while since I've gotten to write a Ruby HTTP client. :grin:
+View the [usage](#usage) section to see what CredHub endpoints the gem currently supports.
 
 ## Installation
 
-There is a `0.1.0.pre` release available on Ruby Gems that you can install which handles quite a few CredHub endpoints.
-I'd like to implement a few more endpoints, do some additional polishing, and add better documentation before taking off the `.pre` suffix, though.
-
-To pick up the latest changes, add this line to your application's Gemfile:
+To install the latest release, add this line to your application's Gemfile:
 ```ruby
-gem 'cred_hubble', git: 'https://github.com/tcdowney/cred_hubble'
+gem 'cred_hubble', '~> 0.1.0'
 ```
 
 And then execute:
@@ -27,13 +25,35 @@ And then execute:
 Or install it yourself as:
 
     $ gem install cred_hubble
+    
+## Usage
 
-## Authentication
+CredHubble currently supports the following [CredHub endpoints](https://credhub-api.cfapps.io):
 
-To call endpoints that require authentication, you can authenticate with either an oAuth2 bearer token auth header or using mutual TLS (mTLS).
+* **[Client Creation and Authentication](#client-creation-and-authentication)**
+
+
+* **[GET Info](#get-info-and-get-health):** `/info`
+* **[GET Health](#get-info-and-get-health):** `/health`
+
+
+* **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
+* **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
+* **[PUT Credential](#put-credential):** `/api/v1/data`
+* **[DELETE Credential by Name](#delete-credential-by-name):** `/api/v1/data`
+* **[POST Interpolate Credentials](#post-interpolate-credentials):** `/api/v1/interpolate`
+
+
+* **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
+* **[POST Add Permissions](#post-add-permissions):** `/api/v1/permissions`
+* **[DELETE Delete Permissions](#delete-delete-permissions):** `/api/v1/permissions?credential_name=<credential-name>&actor=<actor>`
+
+### Client Creation and Authentication
+
+To call endpoints that require authentication, you will need to authenticate with either an oAuth2 bearer token 'Authorization' header or with certificate-based [mutual TLS](https://en.wikipedia.org/wiki/Mutual_authentication) (mTLS).
 Here are some examples:
 
-### Authenticating with an oAuth2 header
+#### Authenticating with an oAuth2 header
 ```ruby
 > auth_header    = 'eyJhbGc.....OiJSUzI1NiIsI' # omit any 'bearer' portion
 > credhub_client = CredHubble::Client.new_from_token_auth(
@@ -46,7 +66,7 @@ Here are some examples:
   => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
 ```
 
-### Authenticating with a client cert and key over mutual TLS
+#### Authenticating with a client cert and key over mutual TLS
 A typical Cloud Foundry application using CredHub will have access to two environment variables that contain these paths:
 * `ENV['CF_INSTANCE_CERT']`
 * `ENV['CF_INSTANCE_KEY']`
@@ -67,7 +87,7 @@ CredHub's CA certificate should already have been placed in the app instance's t
   => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
 ```
 
-### Specifying the CredHub CA certificate
+#### Specifying the CredHub CA certificate
 If your CredHub server is using a self-signed (or otherwise non-trusted by your system) certificate you can supply CredHubble with the path to a local copy of the signing CA certificate.
 
 ```ruby
@@ -84,25 +104,7 @@ If your CredHub server is using a self-signed (or otherwise non-trusted by your 
   => #<CredHubble::Resources::ValueCredential:0x0055f3811a5958 ...
 ```
 
-## Usage
-
-CredHubble currently supports the following [CredHub endpoints](https://credhub-api.cfapps.io):
-
-* **[GET Info](#get-info-and-get-health):** `/info`
-* **[GET Health](#get-info-and-get-health):** `/health`
-
-
-* **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
-* **[GET Credentials by Name](#get-credentials-by-name):** `/api/v1/data?name=<credential-name>`
-* **[PUT Credential](#put-credential):** `/api/v1/data`
-* **[DELETE Credential by Name](#delete-credential-by-name):** `/api/v1/data`
-* **[POST Interpolate Credentials](#post-interpolate-credentials):** `/api/v1/interpolate`
-
-
-* **[GET Permissions by Credential Name](#get-permissions-by-credential-name):** `/api/v1/permissions?credential_name=<credential-name>`
-* **[POST Add Permissions](#post-add-permissions):** `/api/v1/permissions`
-* **[DELETE Delete Permissions](#delete-delete-permissions):** `/api/v1/permissions?credential_name=<credential-name>&actor=<actor>`
-
+### Supported Actions
 
 ### GET Info and GET Health
 To try out the unauthenticated `info` and `health` endpoints, just do the following in your Ruby console:
@@ -157,6 +159,14 @@ You can retrieve only the most recent version of the credential using the `curre
   => 1
 > credentials.map(&:id)
   => ["5298e0e4-c3f5-4c73-a156-9ffce4c137f5"]
+```
+
+Most times, though, you'll just want to grab the value of the most current version of a credential. This is where the `current_credential_value` method comes in.
+Here's what that might look like for the example above:
+
+```ruby
+> credhub_client.current_credential_value('/admin-user-password')
+  => "8mn6LSLzJqhVxnqYCCXUxUADdj8XneYP"
 ```
 
 ### PUT Credential
