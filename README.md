@@ -35,6 +35,7 @@ CredHubble currently supports the following [CredHub endpoints](https://credhub-
 
 * **[GET Info](#get-info-and-get-health):** `/info`
 * **[GET Health](#get-info-and-get-health):** `/health`
+* **[GET Encryption Key Usage](#get-encryption-key-usage):** `/api/v1/key-usage`
 
 
 * **[GET Credential by ID](#get-credential-by-id):** `/api/v1/data/<credential-id>`
@@ -398,6 +399,26 @@ You can remove any permissions for a given actor from a credential with the `del
         
 > credhub_client.permissions_by_credential_name('/my-awesome-credential').count
   => 2
+```
+
+### GET Encryption Key Usage
+
+You can fetch information about how many credentials are encrypted for the active (and inactive) encryption key
+using the `key_usage` method. For more information, check out the official [CredHub docs](https://credhub-api.cfapps.io/#encryption-key-usage)
+for this endpoint.
+
+```ruby
+> encryption_key_usage = credhub_client.key_usage
+  => #<CredHubble::Resources::KeyUsage:0x00007f8 ...>
+  
+> encryption_key_usage.active_key
+  => 9000
+        
+> encryption_key_usage.inactive_keys
+  => 20
+  
+> encryption_key_usage.unknown_keys
+  => 0
 ```
 
 ## Development
