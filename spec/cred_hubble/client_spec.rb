@@ -138,6 +138,22 @@ RSpec.describe CredHubble::Client do
     end
   end
 
+  describe '#key_usage' do
+    let(:response_body) { '{"active_key": 47405, "inactive_keys": 1, "unknown_keys": 2}' }
+
+    it 'makes a request to the /key-usage endpoint' do
+      subject.key_usage
+      expect(mock_http_client).to have_received(:get).with('api/v1/key-usage')
+    end
+
+    it 'returns a KeyUsage resource' do
+      key_usage = subject.key_usage
+      expect(key_usage.active_key).to eq(47_405)
+      expect(key_usage.inactive_keys).to eq(1)
+      expect(key_usage.unknown_keys).to eq(2)
+    end
+  end
+
   describe '#credential_by_id' do
     let(:response_body) do
       '{

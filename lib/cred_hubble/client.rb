@@ -76,6 +76,14 @@ module CredHubble
       CredHubble::Resources::Health.from_json(response)
     end
 
+    # Performs a GET request to the CredHub /key-usage endpoint.
+    #
+    # @return [CredHubble::Resources::KeyUsage] a CredHubble::Resources::KeyUsage instance
+    def key_usage
+      response = http_client.get('api/v1/key-usage').body
+      CredHubble::Resources::KeyUsage.from_json(response)
+    end
+
     # Retrieves a Credential by ID.
     #
     # @param credential_id [String] a CredHub credential identifier

@@ -1,5 +1,6 @@
 require 'cred_hubble/resources/info'
 require 'cred_hubble/resources/health'
+require 'cred_hubble/resources/key_usage'
 
 require 'cred_hubble/resources/credential'
 require 'cred_hubble/resources/credential_collection'
